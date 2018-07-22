@@ -17,6 +17,10 @@ class MyScene extends Scene {
                 const { worldX, worldY } = pointer;
                 tank.aim(worldX, worldY);
             });
+            this.input.on('pointerdown', (pointer, gameObject) => {
+                const { worldX, worldY } = pointer;
+                tank.driveTo(worldX, worldY);
+            });
             this.tanks.push(tank);
         }
     }
