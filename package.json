@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "lodash.debounce": "^4.0.8",
     "phaser": "^3.11.0",
     "ts-loader": "^4.4.2",
     "typescript": "^2.9.2",

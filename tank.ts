@@ -1,13 +1,18 @@
 import { Physics, Scene, Math as PMath } from 'phaser';
+import { BattleScene } from './app.js';
+import * as debounce from 'lodash.debounce';
+
 const { cos, sin } = Math;
 const { Angle, RadToDeg, DegToRad } = PMath;
 const { BetweenPoints, WrapDegrees, ShortestBetween } = Angle;
-
 const SPEED = 50;
+const RANGE = 250; // todo should be a member based on type of tank
+const BULLET_VELOCITY = 200;
+const FIRE_RATE = 3000; // 1 per second 2000 for 1 per 2 seconds etc
 
 export class Tank {
     private turret: Physics.Arcade.Sprite;
-    private chassis: Physics.Arcade.Sprite;
+    public chassis: Physics.Arcade.Sprite;
     private selectionRect: Physics.Arcade.Sprite;
     private healthBar:Physics.Arcade.Sprite;
 
@@ -16,12 +21,19 @@ export class Tank {
     private tankMoveGameObject: Physics.Arcade.Sprite;
     private driveToGameObject: Physics.Arcade.Sprite;
 
+    private rangeCircle: Physics.Arcade.Sprite;
+
     private health:number = 100;
     private maxHealth:number = 100;
 
-    constructor(private scene: Scene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer') {
+    private target: Tank;
+
+    constructor(private scene: BattleScene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', otherTanksGroup: Physics.Arcade.Group) {
+        this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE });
         this._generateSelectedTexture();
         this._generateHealthBar();
+        this._generateRangeCircle();
+
         this.chassis = scene.physics.add.sprite(x, y, `${type}-chassis`);
         if(type === 'panzer'){
             y = y-10;
@@ -35,6 +47,10 @@ export class Tank {
         this.healthBar = scene.physics.add.sprite(x, y - this.chassis.body.halfHeight - 7, 'health-bar');
         this.hideHealth();
 
+        this.rangeCircle = scene.physics.add.sprite(x, y, 'range-circle');
+        this.rangeCircle.body.setCircle(200);
+        this.hideRangeCircle();
+
         this.tankMoveGameObject = this.scene.physics.add.sprite(x, y, null);
         const radius = 10;
         this.tankMoveGameObject.body
@@ -44,9 +60,20 @@ export class Tank {
 
         this.chassis.on('pointerover', () => {
             this.showHealth();
+            this.showRangeCircle();
         });
         this.chassis.on('pointerout', () => {
             this.hideHealth();
+            this.hideRangeCircle();
+        });
+        this.scene.physics.add.overlap(this.rangeCircle, otherTanksGroup, (circle, enemyChassis ) => {
+            if(!this.target){
+                this.target = this.scene.resolveTank(enemyChassis);
+            }
+
+            if(this.target){
+                this.aim(this.target.chassis.x, this.target.chassis.y);
+            }
         });
     }
 
@@ -94,7 +121,7 @@ export class Tank {
     }
 
     _generateHealthBar(){
-        const graphics = this.scene.add.graphics({});
+        const graphics = this.scene.add.graphics();
         graphics.clear();
         graphics.lineStyle(2, 0xFFFFFF, 1);
         graphics.fillStyle(0x12DD20);
@@ -109,16 +136,35 @@ export class Tank {
         return graphics;     
     }
 
+    _generateRangeCircle(){
+        const graphics = this.scene.add.graphics();
+        graphics.clear();
+        graphics.lineStyle(1, 0xFFFFFF, 0.05);
+        const range = RANGE;
+        graphics.strokeCircle(range, range, range)
+        graphics.generateTexture('range-circle', range * 2, range * 2);
+        graphics.clear();
+    }
+
+    fire(){
+        const angle = DegToRad(this.turret.angle - 90);
+        const projectile = this.scene.physics.add.sprite(this.x, this.y, null);
+        projectile.setVelocityX(BULLET_VELOCITY * cos(angle));
+        projectile.setVelocityY(BULLET_VELOCITY * sin(angle));
+    }
+
     update() {
         if (this.turret.body.angularVelocity > 0) {
             // rotating clockwise
             if (this.aimAngle > 0) {
                 if (this.turret.angle > 0 && this.turret.angle >= this.aimAngle) {
                     this.turret.setAngularVelocity(0);
+                    this.fire();
                 }
             } else if (this.aimAngle < 0) {
                 if (this.turret.angle < 0 && this.turret.angle >= this.aimAngle) {
                     this.turret.setAngularVelocity(0);
+                    this.fire();
                 }
             }
         } else if (this.turret.body.angularVelocity < 0) {
@@ -126,10 +172,12 @@ export class Tank {
             if (this.aimAngle < 0) {
                 if (this.turret.angle < 0 && this.turret.angle <= this.aimAngle) {
                     this.turret.setAngularVelocity(0);
+                    this.fire();
                 }
             } else if (this.aimAngle > 0) {
                 if (this.turret.angle > 0 && this.turret.angle <= this.aimAngle) {
                     this.turret.setAngularVelocity(0);
+                    this.fire();
                 }
             }
         }
@@ -219,12 +267,15 @@ export class Tank {
         setVelocity(this.tankMoveGameObject);
         setVelocity(this.selectionRect);
         setVelocity(this.healthBar.body);
+        setVelocity(this.rangeCircle);
     }
 
     public set selected(value:boolean){
         this.selectionRect.setVisible(value);
         this.healthBar.setVisible(value);
+        this.rangeCircle.setVisible(value);
     }
+
     public get selected() : boolean {
         return this.selectionRect.visible;
     }
@@ -235,5 +286,21 @@ export class Tank {
         if(!this.selected){
             this.healthBar.setVisible(false);
         }
+    }
+
+    public showRangeCircle(){
+        this.rangeCircle.setVisible(true);
+    }
+    public hideRangeCircle(){
+        if(!this.selected){
+            this.rangeCircle.setVisible(false);
+        }
+    }
+
+    get x (){
+        return this.chassis.x;
+    }
+    get y(){
+        return this.chassis.y;
     }
 }

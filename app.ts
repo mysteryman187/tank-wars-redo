@@ -1,7 +1,7 @@
 import { Game, AUTO, Scene, Math, Physics } from 'phaser';
 import { Tank } from './tank';
 
-class MyScene extends Scene {
+export class BattleScene extends Scene {
     private tanks: Tank[] = [];
     constructor(a) {
         super(a);
@@ -17,16 +17,22 @@ class MyScene extends Scene {
         const germans = [];
 
         const makeTank = (x, y, type, ar, playerTank) => {
-            const tank = new Tank(this, playerTank, x, y, type);
+            const tank = new Tank(this, playerTank, x, y, type, playerTank ? enemyGroup : playerGroup);
             ar.push(tank);
             if(playerTank){
                 tank.onClick(() => {
                     ar.filter(t => t!= tank).forEach(tank => tank.selected = false);
                     tank.selected = true;
                 });    
+                playerGroup.add(tank.chassis);
+            }else{
+                enemyGroup.add(tank.chassis);
             }
             this.tanks.push(tank);
         }
+
+        const playerGroup = this.physics.add.group();
+        const enemyGroup = this.physics.add.group();
 
         for(let t = 1; t < 6; t++){
             makeTank(50, t * 100, 'hotchkiss', tanks, true);
@@ -39,6 +45,9 @@ class MyScene extends Scene {
         //     const { worldX, worldY } = pointer;
         //     tank.aim(worldX, worldY);
         // });
+
+        
+        
 
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
             if(gameObjects.length){
@@ -54,6 +63,11 @@ class MyScene extends Scene {
     update() {
         this.tanks.forEach(t => t.update()); 
     }
+    
+    public resolveTank(chassis):Tank{
+        return this.tanks.find(tank => tank.chassis === chassis);
+    }
+
 }
 
 const game = new Game({
@@ -67,6 +81,6 @@ const game = new Game({
             debug: false
         }
     },
-    scene: MyScene
+    scene: BattleScene
 });
 
