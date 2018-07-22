@@ -7,20 +7,32 @@ class MyScene extends Scene {
         super(a);
     }
     preload() {
-        this.load.image('chassis', 'assets/images/hotchkiss-chassis-64.png');
-        this.load.image('turret', 'assets/images/hotchkiss-turret-64.png');
+        this.load.image('panzer-chassis', 'assets/images/panzer-chassis-64.png');
+        this.load.image('panzer-turret', 'assets/images/panzer-turret-64.png');
+        this.load.image('hotchkiss-chassis', 'assets/images/hotchkiss-chassis-64.png');
+        this.load.image('hotchkiss-turret', 'assets/images/hotchkiss-turret-64.png');
     }
     create() {
         const tanks = [];
-        for(let t = 1; t < 6; t++){
-            const tank = new Tank(this, Math.Between(10, 700), t * 100);
-            tanks.push(tank);
-            tank.onClick(() => {
-                tanks.filter(t => t!= tank).forEach(tank => tank.selected = false);
-                tank.selected = true;
-              ///  console.log('tank onlick', arguments);
-            });
+        const germans = [];
+
+        const makeTank = (x, y, type, ar, playerTank) => {
+            const tank = new Tank(this, playerTank, x, y, type);
+            ar.push(tank);
+            if(playerTank){
+                tank.onClick(() => {
+                    ar.filter(t => t!= tank).forEach(tank => tank.selected = false);
+                    tank.selected = true;
+                });    
+            }
             this.tanks.push(tank);
+        }
+
+        for(let t = 1; t < 6; t++){
+            makeTank(50, t * 100, 'hotchkiss', tanks, true);
+        }
+        for(let t = 1; t < 6; t++){
+            makeTank(500, t * 100, 'panzer', germans, false);
         }
 
         // this.input.on('pointermove', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {

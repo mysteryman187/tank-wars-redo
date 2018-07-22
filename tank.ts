@@ -19,17 +19,21 @@ export class Tank {
     private health:number = 100;
     private maxHealth:number = 100;
 
-    constructor(private scene: Scene, x: number, y: number) {
+    constructor(private scene: Scene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer') {
         this._generateSelectedTexture();
         this._generateHealthBar();
-        this.chassis = scene.physics.add.sprite(x, y, 'chassis');
-        this.turret = scene.physics.add.sprite(x, y, 'turret');
+        this.chassis = scene.physics.add.sprite(x, y, `${type}-chassis`);
+        if(type === 'panzer'){
+            y = y-10;
+        }
+        this.turret = scene.physics.add.sprite(x, y, `${type}-turret`);
 
         this.chassis.setInteractive();
 
         this.selectionRect = scene.physics.add.sprite(x, y, 'selected-rect');
         this.selectionRect.setVisible(false);
         this.healthBar = scene.physics.add.sprite(x, y - this.chassis.body.halfHeight - 7, 'health-bar');
+        this.hideHealth();
 
         this.tankMoveGameObject = this.scene.physics.add.sprite(x, y, null);
         const radius = 10;
@@ -131,7 +135,7 @@ export class Tank {
         }
 
         if (this.chassis.body.angularVelocity > 0) {
-            // rotating clockwise
+            // rotating clockwise           
             if (this.driveAngle > 0) {
                 if (this.chassis.angle > 0 && this.chassis.angle >= this.driveAngle) {
                     this.chassis.setAngularVelocity(0);
