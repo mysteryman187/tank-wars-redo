@@ -6,8 +6,8 @@ const { cos, sin } = Math;
 const { Angle, RadToDeg, DegToRad } = PMath;
 const { BetweenPoints, WrapDegrees, ShortestBetween } = Angle;
 const SPEED = 50;
-const RANGE = 250; // todo should be a member based on type of tank
-const BULLET_VELOCITY = 200;
+export const RANGE = 250; // todo should be a member based on type of tank
+const BULLET_VELOCITY = 400;
 const FIRE_RATE = 3000; // 1 per second 2000 for 1 per 2 seconds etc
 
 export class Tank {
@@ -26,13 +26,12 @@ export class Tank {
     private health:number = 100;
     private maxHealth:number = 100;
 
-    private target: Tank;
+    public target: Tank;
+    private destroyed: boolean;
 
-    constructor(private scene: BattleScene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', otherTanksGroup: Physics.Arcade.Group) {
-        this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE });
-        this._generateSelectedTexture();
+    constructor(private scene: BattleScene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group) {
+        this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE, leading: true });
         this._generateHealthBar();
-        this._generateRangeCircle();
 
         this.chassis = scene.physics.add.sprite(x, y, `${type}-chassis`);
         if(type === 'panzer'){
@@ -48,7 +47,7 @@ export class Tank {
         this.hideHealth();
 
         this.rangeCircle = scene.physics.add.sprite(x, y, 'range-circle');
-        this.rangeCircle.body.setCircle(200);
+        this.rangeCircle.body.setCircle(RANGE);
         this.hideRangeCircle();
 
         this.tankMoveGameObject = this.scene.physics.add.sprite(x, y, null);
@@ -72,54 +71,23 @@ export class Tank {
             }
 
             if(this.target){
-                this.aim(this.target.chassis.x, this.target.chassis.y);
+                this.aim(this.target.chassis.x, this.target.chassis.y, this.isIdle());
             }
         });
     }
 
+    isIdle(){
+        const velocity = this.chassis.body.velocity;
+        return velocity.x === 0 && velocity.y === 0;
+    }
+
+    isMoving(){
+        return !this.isIdle();
+    }
     onClick(callback){
         this.chassis.on('pointerdown', callback);
     }
-
-    _generateSelectedTexture(){
-        const graphics = this.scene.add.graphics();
-        graphics.clear();
-        graphics.lineStyle(2, 0xFFFFFF, 1);
-
-        const pad = 0;
-        const quadLen = 6;
-        const w = 64
-        const h = 64;
-        
-        graphics.beginPath();
-        graphics.moveTo(pad, pad + quadLen);
-        graphics.lineTo(pad, pad);
-        graphics.lineTo(pad + quadLen, pad);
-        graphics.strokePath();
-
-        graphics.beginPath();
-        graphics.moveTo(w - (quadLen + pad), pad);
-        graphics.lineTo(w - pad, pad);
-        graphics.lineTo(w - pad, pad + quadLen);
-        graphics.strokePath();
-
-        graphics.beginPath();
-        graphics.moveTo(w - pad, h - pad - quadLen);
-        graphics.lineTo(w - pad, h - pad);
-        graphics.lineTo(w - pad - quadLen, h - pad);
-        graphics.strokePath();
-
-        graphics.beginPath();
-        graphics.moveTo(pad + quadLen, h - pad);
-        graphics.lineTo(pad, h - pad);
-        graphics.lineTo(pad, h - pad - quadLen);
-        graphics.strokePath();
-
-        graphics.generateTexture('selected-rect', w, h)
-        graphics.clear();
-        graphics.destroy();
-    }
-
+   
     _generateHealthBar(){
         const graphics = this.scene.add.graphics();
         graphics.clear();
@@ -136,24 +104,64 @@ export class Tank {
         return graphics;     
     }
 
-    _generateRangeCircle(){
-        const graphics = this.scene.add.graphics();
-        graphics.clear();
-        graphics.lineStyle(1, 0xFFFFFF, 0.05);
-        const range = RANGE;
-        graphics.strokeCircle(range, range, range)
-        graphics.generateTexture('range-circle', range * 2, range * 2);
-        graphics.clear();
-    }
-
     fire(){
-        const angle = DegToRad(this.turret.angle - 90);
-        const projectile = this.scene.physics.add.sprite(this.x, this.y, null);
-        projectile.setVelocityX(BULLET_VELOCITY * cos(angle));
-        projectile.setVelocityY(BULLET_VELOCITY * sin(angle));
+        if(this.target){
+            const angle = DegToRad(this.turret.angle - 90);
+            const projectile = this.scene.physics.add.sprite(this.x, this.y, 'projectile');
+    
+            projectile.setVelocityX(BULLET_VELOCITY * cos(angle));
+            projectile.setVelocityY(BULLET_VELOCITY * sin(angle));
+    
+            this.scene.physics.add.overlap(projectile, this.target.chassis, (p, enemyChassis ) => {
+                projectile.destroy(); 
+                const hitTank = this.scene.resolveTank(enemyChassis);
+                if(hitTank){
+                    hitTank.takeDamage();
+                }
+            });
+        }
     }
-
+    takeDamage(){
+        if(this.playerTank){
+            // someone hit me
+            // todo send a mesage that i was hit
+            this.health-=10;
+        } else {
+            // i hit an enemy - i wont reduce enemy health until i get a message to do so
+            // todo - dont do this locally
+            this.health-=10
+        }
+        this._generateHealthBar();
+        this.checkForDeath();
+    }
+    checkForDeath(){
+        console.log('checking ', this.health);
+        if(this.health <= 0 ){
+            // todo destroy this tank
+            this.destroy();
+            if(this.playerTank){
+                // todo send a message that i was detroyed
+            }
+        }
+    }
+    destroy(){
+        this.destroyed = true;
+        // todo explosion animation first!
+        this.chassis.destroy();
+        this.turret.destroy();
+        this.healthBar.destroy();
+        this.selectionRect.destroy();
+        if(this.driveToGameObject){
+            this.driveToGameObject.destroy();
+        }
+        this.tankMoveGameObject.destroy();
+        this.rangeCircle.destroy();
+        this.scene.removeTank(this);
+    }
     update() {
+        if(this.destroyed){
+            return;
+        }
         if (this.turret.body.angularVelocity > 0) {
             // rotating clockwise
             if (this.aimAngle > 0) {
@@ -187,12 +195,16 @@ export class Tank {
             if (this.driveAngle > 0) {
                 if (this.chassis.angle > 0 && this.chassis.angle >= this.driveAngle) {
                     this.chassis.setAngularVelocity(0);
-                    this.setVelocity(SPEED);
+                    if(this.driveToGameObject){
+                        this.setVelocity(SPEED);
+                    }
                 }
             } else if (this.driveAngle < 0) {
                 if (this.chassis.angle < 0 && this.chassis.angle >= this.driveAngle) {
                     this.chassis.setAngularVelocity(0);
-                    this.setVelocity(SPEED);
+                    if(this.driveToGameObject){
+                        this.setVelocity(SPEED);
+                    }
                 }
             }
         } else if (this.chassis.body.angularVelocity < 0) {
@@ -200,18 +212,27 @@ export class Tank {
             if (this.driveAngle < 0) {
                 if (this.chassis.angle < 0 && this.chassis.angle <= this.driveAngle) {
                     this.chassis.setAngularVelocity(0);
-                    this.setVelocity(SPEED);
+                    if(this.driveToGameObject){
+                        this.setVelocity(SPEED);
+                    }
                 }
             } else if (this.driveAngle > 0) {
                 if (this.chassis.angle > 0 && this.chassis.angle <= this.driveAngle) {
                     this.chassis.setAngularVelocity(0);
-                    this.setVelocity(SPEED);
+                    if(this.driveToGameObject){
+                        this.setVelocity(SPEED);
+                    }
                 }
             }
         }
     }
 
-    aim(worldX: number, worldY: number) {
+    aim(worldX: number, worldY: number, stopAndAimChasis:boolean = false) {
+        
+        if(stopAndAimChasis){
+            this.aimChassis(worldX, worldY);
+        }
+
         const angleBetweenTarget = BetweenPoints(this.turret, { x: worldX, y: worldY });
         const moveToAngle = WrapDegrees(RadToDeg(angleBetweenTarget) + 90);
         this.aimAngle = moveToAngle;
@@ -223,10 +244,7 @@ export class Tank {
         }
     }
 
-    driveTo(worldX, worldY) {
-        // todo - once we add scenery/obstacles we'll need to do some pathfinding
-        // lets think of this as a simple A->B path from current location
-        // todo also aim(worldX, worldY) - if not engagedInCombat
+    aimChassis(worldX, worldY){
         this.setVelocity(0);
         const angleBetweenTarget = BetweenPoints(this.chassis, { x: worldX, y: worldY });
         const moveToAngle = WrapDegrees(RadToDeg(angleBetweenTarget) + 90);
@@ -237,11 +255,19 @@ export class Tank {
         } else if (differenceAngle < 0) {
             this.chassis.setAngularVelocity(-100);
         }
+    }
+    driveTo(worldX, worldY) {
+        // todo - once we add scenery/obstacles we'll need to do some pathfinding
+        // lets think of this as a simple A->B path from current location
+        // todo also aim(worldX, worldY) - if not engagedInCombat
+      
+        this.aimChassis(worldX, worldY);
 
         if (this.driveToGameObject) {
             this.driveToGameObject.destroy();
         }
 
+        // make a hidden sprite at the point we want to drive to
         this.driveToGameObject = this.scene.physics.add.staticSprite(worldX, worldY, null);
         const radius = 5;
         this.driveToGameObject.body
@@ -250,6 +276,7 @@ export class Tank {
 
         this.driveToGameObject.setVisible(false);
 
+        // when we overlap then we got there
         this.scene.physics.add.overlap(this.tankMoveGameObject, this.driveToGameObject, () => {
             this.setVelocity(0);
             this.driveToGameObject.destroy();

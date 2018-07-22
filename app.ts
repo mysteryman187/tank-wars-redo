@@ -1,16 +1,23 @@
 import { Game, AUTO, Scene, Math, Physics } from 'phaser';
-import { Tank } from './tank';
+import { Tank, RANGE } from './tank';
+import { selectedRectangle, rangeCircle, projectile } from './textures';
+
 
 export class BattleScene extends Scene {
     private tanks: Tank[] = [];
     constructor(a) {
         super(a);
+       
     }
     preload() {
         this.load.image('panzer-chassis', 'assets/images/panzer-chassis-64.png');
         this.load.image('panzer-turret', 'assets/images/panzer-turret-64.png');
         this.load.image('hotchkiss-chassis', 'assets/images/hotchkiss-chassis-64.png');
         this.load.image('hotchkiss-turret', 'assets/images/hotchkiss-turret-64.png');
+        selectedRectangle(this);
+        console.log('==========', RANGE)
+        rangeCircle(this, RANGE);
+        projectile(this);
     }
     create() {
         const tanks = [];
@@ -63,9 +70,17 @@ export class BattleScene extends Scene {
     update() {
         this.tanks.forEach(t => t.update()); 
     }
-    
+
     public resolveTank(chassis):Tank{
         return this.tanks.find(tank => tank.chassis === chassis);
+    }
+    public removeTank(tank:Tank){
+        this.tanks.forEach((t) => {
+            if(t.target === tank){
+                t.target = null;
+            }
+        });
+        this.tanks = this.tanks.filter(t => t !== tank);
     }
 
 }
@@ -81,6 +96,7 @@ const game = new Game({
             debug: false
         }
     },
+    backgroundColor: '#055f19',
     scene: BattleScene
 });
 
