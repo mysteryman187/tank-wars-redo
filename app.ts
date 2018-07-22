@@ -1,10 +1,8 @@
 import { Game, AUTO, Scene, Math, Physics } from 'phaser';
+import { Tank } from './tank';
 
 class MyScene extends Scene {
-    private turret: Physics.Arcade.Sprite;
-    private chassis: Physics.Arcade.Sprite;
-    private moveToAngle: number;
-    
+    private tanks: Tank[] = [];
     constructor(a) {
         super(a);
     }
@@ -13,53 +11,17 @@ class MyScene extends Scene {
         this.load.image('turret', 'assets/images/hotchkiss-turret-64.png');
     }
     create() {
-        const chassis = this.physics.add.sprite(100, 100, 'chassis');
-        const turret = this.turret = this.physics.add.sprite(100, 100, 'turret');
-        
-
-        this.input.on('pointermove', (pointer, gameObject) => {
-            const { worldX, worldY } = pointer;
-            const angleBetweenPointer = Math.Angle.BetweenPoints(chassis, { x: worldX, y: worldY });
-            const moveToAngle = Math.Angle.WrapDegrees(Math.RadToDeg(angleBetweenPointer) + 90);
-            this.moveToAngle = moveToAngle;
-            const differenceAngle = Math.Angle.ShortestBetween(turret.angle, moveToAngle);
-            if(differenceAngle > 0){
-                this.turret.setAngularVelocity(100);
-                console.log(this.moveToAngle);
-            }else if(differenceAngle < 0){
-                this.turret.setAngularVelocity(-100);
-                console.log(this.moveToAngle);
-            }
-        });
+        for(let t = 0; t < 10; t++){
+            const tank = new Tank(this, Math.Between(10, 700), t * 100);
+            this.input.on('pointermove', (pointer, gameObject) => {
+                const { worldX, worldY } = pointer;
+                tank.aim(worldX, worldY);
+            });
+            this.tanks.push(tank);
+        }
     }
     update() {
-        if(this.turret.body.angularVelocity > 0){
-            // rotating clockwise
-            if(this.moveToAngle > 0){
-                if(this.turret.angle > 0 && this.turret.angle >= this.moveToAngle){
-                    this.turret.setAngularVelocity(0);
-                    console.log('stop 1');
-                }
-            } else if(this.moveToAngle < 0) {
-                if(this.turret.angle < 0 && this.turret.angle >= this.moveToAngle){
-                    this.turret.setAngularVelocity(0);
-                    console.log('stop 2');
-                }
-            }
-        }else if(this.turret.body.angularVelocity < 0){
-            //rotating anti-clockwise
-            if(this.moveToAngle < 0){
-                if(this.turret.angle < 0 && this.turret.angle <= this.moveToAngle){
-                    this.turret.setAngularVelocity(0);
-                    console.log('stop 3');
-                }
-            } else if(this.moveToAngle > 0) {
-                if(this.turret.angle > 0 && this.turret.angle <= this.moveToAngle){
-                    this.turret.setAngularVelocity(0);
-                    console.log('stop 4');
-                }
-            }
-        }    
+        this.tanks.forEach(t => t.update()); 
     }
 }
 
