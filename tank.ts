@@ -1,5 +1,6 @@
 import { Physics, Scene, Math as PMath } from 'phaser';
 import { BattleScene } from './app.js';
+
 import * as debounce from 'lodash.debounce';
 
 const { cos, sin } = Math;
@@ -10,7 +11,14 @@ export const RANGE = 250; // todo should be a member based on type of tank
 const BULLET_VELOCITY = 400;
 const FIRE_RATE = 3000; // 1 per second 2000 for 1 per 2 seconds etc
 
-export class Tank {
+const distanceToPoint = (cX, cY, pX, pY) =>  Math.sqrt(Math.pow(pX - cX, 2) + Math.pow(pY - cY, 2)) 
+
+// find the point on a circle c with radius r closest to point pX, pY
+const cx = (cX, cY, pX, pY, r) => cX + (pX - cX) / distanceToPoint(cX, cY, pX, pY) * r;
+const cy = (cX, cY, pX, pY, r) => cY + (pY - cY) / distanceToPoint(cX, cY, pX, pY) * r;
+
+
+export class Tank extends Phaser.Events.EventEmitter {
     private turret: Physics.Arcade.Sprite;
     public chassis: Physics.Arcade.Sprite;
     private selectionRect: Physics.Arcade.Sprite;
@@ -29,7 +37,11 @@ export class Tank {
     public target: Tank;
     private destroyed: boolean;
 
+    private timer:Phaser.Time.TimerEvent;
+
     constructor(private scene: BattleScene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group) {
+        super();
+        this.aimAtTarget = this.aimAtTarget.bind(this);
         this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE, leading: true });
         this._generateHealthBar();
 
@@ -67,13 +79,43 @@ export class Tank {
         });
         this.scene.physics.add.overlap(this.rangeCircle, otherTanksGroup, (circle, enemyChassis ) => {
             if(!this.target){
-                this.target = this.scene.resolveTank(enemyChassis);
-            }
-
-            if(this.target){
-                this.aim(this.target.chassis.x, this.target.chassis.y, this.isIdle());
+                const otherTank = this.scene.resolveTank(enemyChassis);
+                this.setTarget(otherTank);
             }
         });
+    }
+
+    public setTarget(tank: Tank){        
+        const onDestroyed = () => {
+            this.target.off('moved', this.aimAtTarget, undefined, undefined);
+            this.target.off('destroyed', onDestroyed, undefined, undefined);
+            this.timer.paused = true;
+            this.timer.destroy();
+            this.target = null;
+        };
+        if(this.target){
+            onDestroyed();
+        }
+        this.target = tank;
+        if(this.target){
+            this.target.on('moved', this.aimAtTarget);
+            this.timer = this.scene.time.addEvent({
+                loop:true,
+                delay: FIRE_RATE,
+                callback: () => this.aimAtTarget()
+            });
+            this.target.once('destroyed', onDestroyed);
+            const range = RANGE - this.chassis.body.halfWidth;
+            // find the point on the circle between us
+            this.driveTo(
+                cx(this.target.x, this.target.y, this.x, this.y, range),
+                cy(this.target.x, this.target.y, this.x, this.y, range),    
+            );
+        }
+    }
+
+    aimAtTarget(){
+        this.aim(this.target.chassis.x, this.target.chassis.y, this.isIdle());
     }
 
     isIdle(){
@@ -104,8 +146,13 @@ export class Tank {
         return graphics;     
     }
 
+    inRange(x, y){    
+        const distance = distanceToPoint(x, y, this.x, this.y);
+        return distance < RANGE;
+    }
+
     fire(){
-        if(this.target){
+        if(!this.destroyed && this.target && this.inRange(this.target.x, this.target.y)){
             const angle = DegToRad(this.turret.angle - 90);
             const projectile = this.scene.physics.add.sprite(this.x, this.y, 'projectile');
     
@@ -157,39 +204,57 @@ export class Tank {
         this.tankMoveGameObject.destroy();
         this.rangeCircle.destroy();
         this.scene.removeTank(this);
-    }
-    update() {
-        if(this.destroyed){
-            return;
+        if(this.timer){
+            this.timer.paused = true;
+            this.timer.destroy();
         }
+        this.setTarget(null);
+        this.emit('destroyed');
+    }
+
+    checkAim(){
         if (this.turret.body.angularVelocity > 0) {
             // rotating clockwise
             if (this.aimAngle > 0) {
                 if (this.turret.angle > 0 && this.turret.angle >= this.aimAngle) {
-                    this.turret.setAngularVelocity(0);
-                    this.fire();
+                   return true;
                 }
             } else if (this.aimAngle < 0) {
                 if (this.turret.angle < 0 && this.turret.angle >= this.aimAngle) {
-                    this.turret.setAngularVelocity(0);
-                    this.fire();
+                   return true;
                 }
             }
         } else if (this.turret.body.angularVelocity < 0) {
             //rotating anti-clockwise
             if (this.aimAngle < 0) {
                 if (this.turret.angle < 0 && this.turret.angle <= this.aimAngle) {
-                    this.turret.setAngularVelocity(0);
-                    this.fire();
+                   return true;
                 }
             } else if (this.aimAngle > 0) {
                 if (this.turret.angle > 0 && this.turret.angle <= this.aimAngle) {
-                    this.turret.setAngularVelocity(0);
-                    this.fire();
+                    return true;
                 }
             }
+        } else if( this.turret.body.angularVelocity === 0){
+            // not moving
+            return this.aimAngle === this.turret.angle;
+        }
+    }
+
+    update() {
+        if(this.destroyed){
+            return;
         }
 
+       // stop the turret from rotating and fire
+       if (this.checkAim()){
+            this.turret.setAngularVelocity(0);
+            this.fire();
+       }
+    
+        /*
+            Stop the chassis from rotating and drive forward
+        */  
         if (this.chassis.body.angularVelocity > 0) {
             // rotating clockwise           
             if (this.driveAngle > 0) {
@@ -225,6 +290,15 @@ export class Tank {
                 }
             }
         }
+
+        this.maybeEmitMoved();
+    }
+
+    maybeEmitMoved(){
+        const { chassis } = this;
+        if(this.chassis.body.velocity.x !== 0 || this.chassis.body.velocity.y !== 0){
+            this.emit('moved');
+        }
     }
 
     aim(worldX: number, worldY: number, stopAndAimChasis:boolean = false) {
@@ -233,10 +307,19 @@ export class Tank {
             this.aimChassis(worldX, worldY);
         }
 
+        console.log('aiming...');
+
         const angleBetweenTarget = BetweenPoints(this.turret, { x: worldX, y: worldY });
         const moveToAngle = WrapDegrees(RadToDeg(angleBetweenTarget) + 90);
         this.aimAngle = moveToAngle;
+
+        if (this.checkAim()){
+            this.fire();
+            return;
+        }
+
         const differenceAngle = ShortestBetween(this.turret.angle, moveToAngle);
+
         if (differenceAngle > 0) {
             this.turret.setAngularVelocity(100);
         } else if (differenceAngle < 0) {
@@ -280,12 +363,14 @@ export class Tank {
         this.scene.physics.add.overlap(this.tankMoveGameObject, this.driveToGameObject, () => {
             this.setVelocity(0);
             this.driveToGameObject.destroy();
+            this.driveToGameObject = null;
         });
     }
 
     setVelocity(velocity: number) {
         const angle = DegToRad(this.chassis.angle - 90);
         const setVelocity = o => {
+            //..  todo could use //this.scene.physics.velocityFromAngle
             o.setVelocityX(velocity * cos(angle));
             o.setVelocityY(velocity * sin(angle));
         };

@@ -59,6 +59,8 @@ export class BattleScene extends Scene {
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
             if(gameObjects.length){
                 // todo maybe attack if its an enemy tank clicked
+                tanks.filter(tank => tank.selected)
+                .forEach(tank => tank.setTarget(this.resolveTank(gameObjects[0])))
             } else {
                 // nothing clicked so move to clicked location
                 const { worldX, worldY } = pointer;
@@ -75,11 +77,6 @@ export class BattleScene extends Scene {
         return this.tanks.find(tank => tank.chassis === chassis);
     }
     public removeTank(tank:Tank){
-        this.tanks.forEach((t) => {
-            if(t.target === tank){
-                t.target = null;
-            }
-        });
         this.tanks = this.tanks.filter(t => t !== tank);
     }
 
