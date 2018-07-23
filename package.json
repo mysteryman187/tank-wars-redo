@@ -2,9 +2,12 @@
   "name": "tank-wars-redo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
+  "engines": {
+    "node": "8.x.x"
+  },
   "scripts": {
-    "start": "npm run watch",
+    "start": "node server.js",
     "build": "webpack-cli",
     "watch": "webpack-dev-server"
   },
@@ -12,14 +15,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.3"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.1.0",
     "lodash.debounce": "^4.0.8",
     "phaser": "^3.11.0",
     "ts-loader": "^4.4.2",
     "typescript": "^2.9.2",
     "webpack": "^4.16.1",
     "webpack-dev-server": "^3.1.4"
-  },
-  "devDependencies": {
-    "webpack-cli": "^3.1.0"
   }
 }

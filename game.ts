@@ -26,6 +26,7 @@ export class BattleScene extends Scene {
 
         const makeTank = (x, y, type, ar, playerTank) => {
             const tank = new Tank(this, playerTank, x, y, type, playerTank ? enemyGroup : playerGroup);
+
             ar.push(tank);
             if(playerTank){
                 playerGroup.add(tank.chassis);
@@ -37,13 +38,30 @@ export class BattleScene extends Scene {
 
         const playerGroup = this.physics.add.group();
         const enemyGroup = this.physics.add.group();
+        
+        const countTanks = 8;
+        for(let t = 1; t <= countTanks; t++){
+            makeTank(100, t * 100, 'hotchkiss', tanks, true);
+        }
+        for(let t = 1; t <= countTanks; t++){
+            makeTank(this.physics.world.bounds.width - 100, t * 100, 'panzer', germans, false);
+        }
 
-        for(let t = 1; t < 6; t++){
-            makeTank(50, t * 100, 'hotchkiss', tanks, true);
-        }
-        for(let t = 1; t < 6; t++){
-            makeTank(500, t * 100, 'panzer', germans, false);
-        }
+        this.physics.add.overlap(playerGroup, enemyGroup, (a, b) => {
+            this.resolveTank(a).setVelocity(0);
+            this.resolveTank(b).setVelocity(0);
+        });
+
+        this.physics.add.overlap(playerGroup, playerGroup, (a, b) => {
+            this.resolveTank(a).setVelocity(0);
+            this.resolveTank(b).setVelocity(0);
+        });
+
+        this.physics.add.overlap(enemyGroup, enemyGroup, (a, b) => {
+            this.resolveTank(a).setVelocity(0);
+            this.resolveTank(b).setVelocity(0);
+        });
+
 
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
             const tanksSelected = tanks.filter(tank => tank.selected);
@@ -84,8 +102,8 @@ export class BattleScene extends Scene {
 
 const game = new Game({
     type: AUTO,
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 1024,
     physics: {
         default: 'arcade',
         arcade: {

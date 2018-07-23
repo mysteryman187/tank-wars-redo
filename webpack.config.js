@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     mode: 'development', // "production" | "development" | "none"  // Chosen mode tells webpack to use its built-in optimizations accordingly.
-    entry: "./app",
+    entry: "./game",
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.js',
