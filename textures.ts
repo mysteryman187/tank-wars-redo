@@ -59,3 +59,19 @@ export const projectile = (scene:Scene) => {
     graphics.clear();
     graphics.destroy();
 }
+
+export const generateHealthBars = (scene:Scene) => {
+        const graphics = scene.add.graphics();
+        for(let i = 0; i <= 100; i+=5){
+            graphics.clear();
+            graphics.lineStyle(2, 0xFFFFFF, 1);
+            graphics.fillStyle(0x12DD20);
+            const pad = 0;
+            const w = 64;
+            const h = 7;
+            graphics.fillRect(pad, pad, (w * i) / 100, h);
+            graphics.strokeRect(pad, pad, w, h);
+            const texture = graphics.generateTexture(`health-bar-${i}`, w, h);
+            graphics.clear();
+        }
+    }

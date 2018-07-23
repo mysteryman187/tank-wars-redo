@@ -39,11 +39,10 @@ export class Tank extends Phaser.Events.EventEmitter {
 
     private timer:Phaser.Time.TimerEvent;
 
-    constructor(private scene: BattleScene, private playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group) {
+    constructor(private scene: BattleScene, public playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group) {
         super();
         this.aimAtTarget = this.aimAtTarget.bind(this);
         this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE, leading: true });
-        this._generateHealthBar();
 
         this.chassis = scene.physics.add.sprite(x, y, `${type}-chassis`);
         if(type === 'panzer'){
@@ -55,7 +54,7 @@ export class Tank extends Phaser.Events.EventEmitter {
 
         this.selectionRect = scene.physics.add.sprite(x, y, 'selected-rect');
         this.selectionRect.setVisible(false);
-        this.healthBar = scene.physics.add.sprite(x, y - this.chassis.body.halfHeight - 7, 'health-bar');
+        this.healthBar = scene.physics.add.sprite(x, y - this.chassis.body.halfHeight - 7, `health-bar-${this.health}`);
         this.hideHealth();
 
         this.rangeCircle = scene.physics.add.sprite(x, y, 'range-circle');
@@ -87,11 +86,13 @@ export class Tank extends Phaser.Events.EventEmitter {
 
     public setTarget(tank: Tank){        
         const onDestroyed = () => {
-            this.target.off('moved', this.aimAtTarget, undefined, undefined);
-            this.target.off('destroyed', onDestroyed, undefined, undefined);
-            this.timer.paused = true;
-            this.timer.destroy();
-            this.target = null;
+            if(this.target){
+                this.target.off('moved', this.aimAtTarget, undefined, undefined);
+                this.target.off('destroyed', onDestroyed, undefined, undefined);
+                this.timer.paused = true;
+                this.timer.destroy();
+                this.target = null;
+            }
         };
         if(this.target){
             onDestroyed();
@@ -129,22 +130,6 @@ export class Tank extends Phaser.Events.EventEmitter {
     onClick(callback){
         this.chassis.on('pointerdown', callback);
     }
-   
-    _generateHealthBar(){
-        const graphics = this.scene.add.graphics();
-        graphics.clear();
-        graphics.lineStyle(2, 0xFFFFFF, 1);
-        graphics.fillStyle(0x12DD20);
-        const pad = 0;
-        const w = 64;
-        const h = 7;
-        const { health, maxHealth } = this;
-        graphics.fillRect(pad, pad, (w * this.health) / this.maxHealth, h);
-        graphics.strokeRect(pad, pad, w, h);
-        const texture = graphics.generateTexture('health-bar', w, h);
-        graphics.clear();
-        return graphics;     
-    }
 
     inRange(x, y){    
         const distance = distanceToPoint(x, y, this.x, this.y);
@@ -172,13 +157,13 @@ export class Tank extends Phaser.Events.EventEmitter {
         if(this.playerTank){
             // someone hit me
             // todo send a mesage that i was hit
-            this.health-=10;
+            this.health-=20;
         } else {
             // i hit an enemy - i wont reduce enemy health until i get a message to do so
             // todo - dont do this locally
-            this.health-=10
+            this.health-=20
         }
-        this._generateHealthBar();
+        this.healthBar.setTexture(`health-bar-${this.health}`);
         this.checkForDeath();
     }
     checkForDeath(){

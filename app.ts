@@ -1,6 +1,6 @@
 import { Game, AUTO, Scene, Math, Physics } from 'phaser';
 import { Tank, RANGE } from './tank';
-import { selectedRectangle, rangeCircle, projectile } from './textures';
+import { selectedRectangle, rangeCircle, projectile, generateHealthBars } from './textures';
 
 
 export class BattleScene extends Scene {
@@ -18,6 +18,7 @@ export class BattleScene extends Scene {
         console.log('==========', RANGE)
         rangeCircle(this, RANGE);
         projectile(this);
+        generateHealthBars(this);
     }
     create() {
         const tanks = [];
@@ -27,10 +28,6 @@ export class BattleScene extends Scene {
             const tank = new Tank(this, playerTank, x, y, type, playerTank ? enemyGroup : playerGroup);
             ar.push(tank);
             if(playerTank){
-                tank.onClick(() => {
-                    ar.filter(t => t!= tank).forEach(tank => tank.selected = false);
-                    tank.selected = true;
-                });    
                 playerGroup.add(tank.chassis);
             }else{
                 enemyGroup.add(tank.chassis);
@@ -48,24 +45,27 @@ export class BattleScene extends Scene {
             makeTank(500, t * 100, 'panzer', germans, false);
         }
 
-        // this.input.on('pointermove', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
-        //     const { worldX, worldY } = pointer;
-        //     tank.aim(worldX, worldY);
-        // });
-
-        
-        
-
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
+            const tanksSelected = tanks.filter(tank => tank.selected);
             if(gameObjects.length){
-                // todo maybe attack if its an enemy tank clicked
-                tanks.filter(tank => tank.selected)
-                .forEach(tank => tank.setTarget(this.resolveTank(gameObjects[0])))
+                const tankClicked = this.resolveTank(gameObjects[0])
+
+                if(tankClicked.playerTank){
+                    // my tank clicked
+                    if(tanksSelected.length === 0){
+                        tankClicked.selected = true;
+                    }else if(tanksSelected.length){
+                        tanksSelected.forEach(tank => tank.selected = false);
+                        tankClicked.selected = true;
+                    }
+                }else {
+                    // enemy tank clicked
+                    tanksSelected.forEach(tank => tank.setTarget(tankClicked));
+                }
             } else {
                 // nothing clicked so move to clicked location
                 const { worldX, worldY } = pointer;
-                tanks.filter(tank => tank.selected)
-                .forEach(tank => tank.driveTo(worldX, worldY))
+                tanksSelected.forEach(tank => tank.driveTo(worldX, worldY));
             }
         });
     }
