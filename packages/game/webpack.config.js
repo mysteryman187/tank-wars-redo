@@ -5,7 +5,7 @@ const package = JSON.parse(fs.readFileSync('package.json'));
 
 module.exports = {
     mode: 'development', // "production" | "development" | "none"  // Chosen mode tells webpack to use its built-in optimizations accordingly.
-    entry: "./game",
+    entry: path.resolve(__dirname, 'game'),
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: `game-${package.version}.js`,
@@ -31,7 +31,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'index.mustache'
+            template: path.resolve(__dirname, 'index.mustache')
         })
     ],
     devtool: "source-map"
