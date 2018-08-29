@@ -18,12 +18,4 @@ Then use datastore in case 2 instances come up!
 
 
 
-....but CRAP!
-
-this repo is a fucking mess!
-we'll need to add yarn workspaces so we can have a package.json for game and one for server
-then that lets us copy the package.json for server into dist for app engine to install with
-...along with a /static directory which is the output of game webpack build
-...just dont depend on anything linked so workspaces wont confuse GAE
-
 

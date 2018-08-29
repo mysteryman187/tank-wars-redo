@@ -15,7 +15,7 @@ const game = new Game({
         }
     },
     backgroundColor: '#055f19',
-    scene: LobbyScene
+    scene: BattleScene
 });
 
 // const ws = new WebSocket(`ws://${location.host}`);

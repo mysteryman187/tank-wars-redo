@@ -4,26 +4,25 @@
     "description": "",
     "main": "server.js",
     "engines": {
-      "node": "8.x.x"
+        "node": "8.x.x"
     },
     "scripts": {
-      "watch": "node server.js --watch-game",
-      "start": "node server.js",
-      "deploy": "gcloud app deploy",
-      "tail": "gcloud app logs tail -s default",
-      "prebuild": "rimraf dist",
-      "build": "node build.js"
+        "watch": "nodemon server.js --watch-game",
+        "start": "node server.js",
+        "deploy": "cd dist && gcloud app deploy",
+        "tail": "gcloud app logs tail -s default",
+        "prebuild": "rimraf dist",
+        "build": "node build.js"
     },
     "dependencies": {
-        "express": "^4.16.3",
-        "tank-wars-redo-game": "^1.0.0"
+        "express": "^4.16.3"
     },
     "devDependencies": {
         "copy": "^0.3.2",
+        "nodemon": "^1.18.4",
+        "tank-wars-redo-game": "1.0.0",
         "rimraf": "^2.6.2",
-        "tank-wars-redo-game": "^1.0.0",
         "webpack": "^4.16.1",
         "webpack-dev-middleware": "^3.1.3"
     }
 }
-  

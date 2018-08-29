@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "webpack-dev-server",
-    "watch": "webpack-dev-server",
+    "watch:client": "webpack-dev-server",
     "prebuild": "rimraf dist",
     "build": "webpack && copy-cli assets/*/* dist/assets"
   },

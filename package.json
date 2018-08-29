@@ -6,7 +6,9 @@
         "packages/*/"
     ],
     "scripts": {
-        "build": "lerna run build"
+        "start": "lerna run watch --stream",
+        "build": "lerna run build --stream",
+        "deploy": "lerna run deploy --stream"
     },
     "dependencies": {
         "lerna": "^3.2.1"
