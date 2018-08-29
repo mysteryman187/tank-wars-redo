@@ -5,7 +5,7 @@
     "start": "webpack-dev-server",
     "watch": "webpack-dev-server",
     "prebuild": "rimraf dist",
-    "build": "copy-cli assets/*/* dist/assets"
+    "build": "webpack && copy-cli assets/*/* dist/assets"
   },
   "dependencies": {
     "lodash.debounce": "^4.0.8",

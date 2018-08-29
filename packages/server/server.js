@@ -10,12 +10,12 @@ if(process.argv.indexOf('--watch-game') != -1){
     const webpack = require('webpack');
     const middleware = require('webpack-dev-middleware');
     const compiler = webpack(require('tank-wars-redo-game/webpack.config'));
-    app.use('/static', middleware(compiler, {
+    app.use('/static/game', middleware(compiler, {
         // webpack-dev-middleware options
     }));       
 } else {
     // otherwise the build creates a /static directory
-    app.use('/static', express.static(path.join(__dirname, 'static')));
+    app.use('/static/game', express.static(path.join(__dirname, 'static', 'game')));
 }
 
 server.listen(port, () => console.log(`Example app listening on port ${port}`));

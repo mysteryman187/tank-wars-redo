@@ -11,12 +11,16 @@
       "start": "node server.js",
       "deploy": "gcloud app deploy",
       "tail": "gcloud app logs tail -s default",
+      "prebuild": "rimraf dist",
       "build": "node build.js"
     },
     "dependencies": {
-        "express": "^4.16.3"
+        "express": "^4.16.3",
+        "tank-wars-redo-game": "^1.0.0"
     },
     "devDependencies": {
+        "copy": "^0.3.2",
+        "rimraf": "^2.6.2",
         "tank-wars-redo-game": "^1.0.0",
         "webpack": "^4.16.1",
         "webpack-dev-middleware": "^3.1.3"
