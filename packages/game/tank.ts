@@ -1,5 +1,5 @@
 import { Physics, Scene, Math as PMath } from 'phaser';
-import { BattleScene } from './game.js';
+import { BattleScene } from './BattleScene';
 
 import * as debounce from 'lodash.debounce';
 

@@ -1,13 +1,11 @@
-import { Game, AUTO, Scene, Math, Physics } from 'phaser';
+import { Scene, Math, Physics } from 'phaser';
 import { Tank, RANGE } from './tank';
 import { selectedRectangle, rangeCircle, projectile, generateHealthBars } from './textures';
-
 
 export class BattleScene extends Scene {
     private tanks: Tank[] = [];
     constructor(a) {
         super(a);
-       
     }
     preload() {
         this.load.image('panzer-chassis', 'assets/images/panzer-chassis-64.png');
@@ -99,19 +97,3 @@ export class BattleScene extends Scene {
     }
 
 }
-
-const game = new Game({
-    type: AUTO,
-    width: 1024,
-    height: 1024,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
-        }
-    },
-    backgroundColor: '#055f19',
-    scene: BattleScene
-});
-

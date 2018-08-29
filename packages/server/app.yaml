@@ -13,4 +13,8 @@
 
 # [START app_yaml]
 runtime: nodejs8
+
+network:
+  forwarded_ports:
+    - 8080/tcp
 # [END app_yaml]
