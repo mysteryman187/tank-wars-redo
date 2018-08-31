@@ -1,25 +1,29 @@
 const Datastore = require('@google-cloud/datastore');
 const { Router } = require('express');
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 const qs = require('qs');
+const cacheControl = require('express-cache-controller');
 var jsonParser = bodyParser.json();
 
-const createRoute = (type, options) => {
+
+const createRoute = (kind, options) => {
     const datastore = new Datastore({
         projectId: options.projectId
     });
     const router = Router();
-    const kind = type;
+    router.use(cacheControl({
+        noCache: true
+    }));  
     /**
      * Query
      */
-    router.get(`/${type}/query`, (req, res) => {
+    router.get(`/${kind}/query`, (req, res) => {
         const q = datastore.createQuery([kind]);
         if (options.query && options.query.filter) {
             options.query.filter(q, qs.parse(req.query));
         }
         if (options.ttl) {
-            q.filter('timestamp', '>', Date.now() - options.query.ttl);
+            q.filter('timestamp', '>', Date.now() - options.ttl);
         }
         datastore.runQuery(q, (err, entities, nextQuery) => {
             if (err) {
@@ -32,10 +36,10 @@ const createRoute = (type, options) => {
             res.end();
         });
     });
-    router.get(`/${type}/`, (req, res) => {
+    router.get(`/${kind}/`, (req, res) => {
         const q = datastore.createQuery([kind]);
         if (options.ttl) {
-            q.filter('timestamp', '>', Date.now() - options.query.ttl);
+            q.filter('timestamp', '>', Date.now() - options.ttl);
         }
         datastore.runQuery(q, (err, entities, nextQuery) => {
             if (err) {
@@ -51,7 +55,7 @@ const createRoute = (type, options) => {
     /**
      * /Get
     */
-    router.get(`/${type}/:id`, (req, res) => {
+    router.get(`/${kind}/:id`, (req, res) => {
         const key = datastore.key([kind, req.params.id]);
         datastore.get(key, (err, entity) => {
             if (err) {
@@ -69,14 +73,14 @@ const createRoute = (type, options) => {
     /**
     *   delete
     */
-    router.delete(`/${type}`, () => {
+    router.delete(`/${kind}`, () => {
         // todo - implement delete action
     });
 
     /**
     *   update/post
     */
-    router.post(`/${type}/:id`, jsonParser, (req, res) => {
+    router.post(`/${kind}/:id`, jsonParser, (req, res) => {
         const key = datastore.key([kind, req.params.id]);
         const data = {
             ...req.body,

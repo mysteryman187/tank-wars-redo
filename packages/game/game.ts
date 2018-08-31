@@ -118,22 +118,87 @@ const connection2 = new Connection(
 );
 
 connection1.connect();
+const userId = `user-${Math.random()}`;
+
+class Model{
+    constructor(private kind:string){
+    }
+    async upsert(id, obj){
+        const response = await fetch(`${location.origin}/${this.kind}/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify(obj)
+        });
+        // todo handle errors
+    }
+    async read(id){
+        const response = await fetch(`${location.origin}/presence`, {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        });
+        const payload = await response.json();
+        return payload;
+    }
+}
+
+class PresenceClient extends Model {
+    constructor(){
+        super('presence');
+    }
+}
+
+class MessageClient extends Model {
+    constructor(){
+        super('msg');
+    }
+    upsert(id){
+        // so this things used to poll for messages
+        // either they are for me
+        // or they are for everyone
+        // scratch that...they are for me only
+        // we use presence to get userIds
+        // and then we know who we are speaking to
+        // so I want to challenge someone - we send that userId a challenge message with a uuid I made up
+        // and i just need to dedupe uuids once i recieve messages
+        // and we give those mesages a long ttl
+    }
+}
+
+const client = new PresenceClient();
+setInterval(() => {
+    client.upsert(userId, { userId });
+}, 9000);
+
+setInterval(async () => {
+    const presentUsers = await client.read(userId);
+    document.querySelector('#prev').innerHTML = '';
+    presentUsers.map(u => {
+        const d = document.createElement('div')
+        d.appendChild(document.createTextNode(u.userId));
+        document.querySelector('#prev').appendChild(d);
+    });
+}, 5000);
 
 
-const game = new Game({
-    type: AUTO,
-    width: 1024,
-    height: 1024,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
-        }
-    },
-    backgroundColor: '#055f19',
-    scene: BattleScene
-});
+// const game = new Game({
+//     type: AUTO,
+//     width: 1024,
+//     height: 1024,
+//     physics: {
+//         default: 'arcade',
+//         arcade: {
+//             gravity: { y: 0 },
+//             debug: false
+//         }
+//     },
+//     backgroundColor: '#055f19',
+//     scene: BattleScene
+// });
 
 // const ws = new WebSocket(`ws://${location.host}`);
 

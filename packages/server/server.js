@@ -35,7 +35,7 @@ app.use(createRoute('demo', {
  // this is where REST falls apart and some smartass says why cant it be 1 POST to update my presence AND query!
 app.use(createRoute('presence', {
     projectId: 'tank-wars-211122',
-    ttl: 25 * 1000,
+    ttl: 10 * 1000,
     query: {
     
     }
