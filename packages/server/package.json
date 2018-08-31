@@ -7,7 +7,7 @@
         "node": "8.x.x"
     },
     "scripts": {
-        "watch": "nodemon server.js --watch-game",
+        "watch": "set GOOGLE_APPLICATION_CREDENTIALS=C:/tank-wars-a28c50b40a2a.json&& nodemon server.js --watch-game",
         "start": "node server.js",
         "deploy": "cd dist && gcloud app deploy",
         "tail": "gcloud app logs tail -s default",
@@ -15,12 +15,15 @@
         "build": "node build.js"
     },
     "dependencies": {
-        "express": "^4.16.3"
+        "express": "^4.16.3",
+        "@google-cloud/datastore": "^1.4.2"
     },
     "devDependencies": {
+        "body-parser": "1.18.3",
         "copy": "^0.3.2",
         "nodemon": "^1.18.4",
         "tank-wars-redo-game": "1.0.0",
+        "qs": "6.5.2",
         "rimraf": "^2.6.2",
         "webpack": "^4.16.1",
         "webpack-dev-middleware": "^3.1.3"

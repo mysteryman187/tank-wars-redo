@@ -16,6 +16,22 @@ but i can send him the data that indicated that I connected...then he gets my IC
 So i can build this in memory at first!
 Then use datastore in case 2 instances come up!
 
+since all we want to do is establish a mesh in the lobby
+we could probably just use a listbox to list stuff out at first
+
+do we really want to make a mesh in the lobby?
+
+pros:
+it means we wont ever fail to connect to someones game - if they show uo we already made a conncection
+I could have a text chat feature in the lobby really easily
+I get to build a mesh & chat before I try to tackle the game - will have most of the code we need to get going multiplayer this way
+
+cons:
+it doesnt seem too scalable - but this wont really be an issue unless we had hundreds of concurrent users
+no chat feature possibility
+if we really want to see everyone i.e. a proper and scalable solution
+    - it would be to use the polling mechanism to list out the games(was the original plan)
+
 
 
 
