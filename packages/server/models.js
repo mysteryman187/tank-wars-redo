@@ -19,14 +19,15 @@ const createRoute = (kind, options) => {
      */
     router.get(`/${kind}/query`, (req, res) => {
         const q = datastore.createQuery([kind]);
-        if (options.query && options.query.filter) {
-            options.query.filter(q, qs.parse(req.query));
-        }
         if (options.ttl) {
             q.filter('timestamp', '>', Date.now() - options.ttl);
         }
+        if (options.query && options.query.filter) {
+            options.query.filter(q, qs.parse(req.query));
+        }
         datastore.runQuery(q, (err, entities, nextQuery) => {
             if (err) {
+                console.error(err);
                 res.statusCode = 500;
                 res.end();
                 return;
@@ -36,6 +37,7 @@ const createRoute = (kind, options) => {
             res.end();
         });
     });
+    
     router.get(`/${kind}/`, (req, res) => {
         const q = datastore.createQuery([kind]);
         if (options.ttl) {

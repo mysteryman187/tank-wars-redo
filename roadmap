@@ -1,37 +1,3 @@
-new plan!
 
-we are not going to use any real time messageing whatsoever BEFORE the webrtc connection is established!
-
-we are going to have a lobby!
-the lobby lists all the games which are available
-how do we know which games are available?
-when we start to host a game or search for a game we POST our ICE candidates and connections thingys
-we put that all into the datastore
-meanwhile we are also polling and checking the datastore for others who are doing the same thing
-
-when we want to connect to someones game we already know his ICE and other thingys
-...so i can connect to someone at which point i can send him data, but he cant send me data :(
-but i can send him the data that indicated that I connected...then he gets my ICE candidates via http now
-
-So i can build this in memory at first!
-Then use datastore in case 2 instances come up!
-
-since all we want to do is establish a mesh in the lobby
-we could probably just use a listbox to list stuff out at first
-
-do we really want to make a mesh in the lobby?
-
-pros:
-it means we wont ever fail to connect to someones game - if they show uo we already made a conncection
-I could have a text chat feature in the lobby really easily
-I get to build a mesh & chat before I try to tackle the game - will have most of the code we need to get going multiplayer this way
-
-cons:
-it doesnt seem too scalable - but this wont really be an issue unless we had hundreds of concurrent users
-no chat feature possibility
-if we really want to see everyone i.e. a proper and scalable solution
-    - it would be to use the polling mechanism to list out the games(was the original plan)
-
-
-
-
+ability to view stats of the dude whos challenging me (add a /stats thing with wins/losses)
+when joining a game delete my presence message

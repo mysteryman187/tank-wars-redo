@@ -1,0 +1,6 @@
+indexes:
+
+- kind: message
+  properties:
+    - name: recipient
+    - name: timestamp

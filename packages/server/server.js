@@ -5,6 +5,9 @@ const app = express();
 const path = require('path');
 const server = new http.createServer(app);
 const { createRoute } = require('./models');
+const morgan = require('morgan');
+
+app.use(morgan('tiny'));
 
 app.use('/', (req, res, next) => {
     if (req.url === '/') {
@@ -14,30 +17,20 @@ app.use('/', (req, res, next) => {
     }
 });
 
-app.use(createRoute('demo', {
-    projectId: 'tank-wars-211122',
-    // ttl: 25 * 1000,
-    query: {
-        filter: (query, queryParams) => {
-            console.log(queryParams);
-            // nothing to do here now..yet - but we have ability to filter differently for different collections
-            // query.filter('myProp', '>=', queryParams.thing);
-            
-            if(queryParams.a){
-                query.filter('hello.a', '=', queryParams.a);
-            }
-        }
-    }
- }));
-
- // clients use this route to check who else is in a lobby
- // they all setInterval to both post and to get to presence
- // this is where REST falls apart and some smartass says why cant it be 1 POST to update my presence AND query!
 app.use(createRoute('presence', {
     projectId: 'tank-wars-211122',
-    ttl: 10 * 1000,
+    ttl: 35 * 1000
+ }));
+
+ app.use(createRoute('message', {
+    projectId: 'tank-wars-211122',
+    ttl: 60 * 1000,
     query: {
-    
+        filter: (query, queryParams) => {
+            Object.keys(queryParams).forEach((key) => {
+                query.filter(key, '=', queryParams[key]);
+            });
+        }
     }
  }));
 

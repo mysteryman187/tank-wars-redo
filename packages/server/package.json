@@ -9,7 +9,7 @@
     "scripts": {
         "watch": "set GOOGLE_APPLICATION_CREDENTIALS=C:/tank-wars-a28c50b40a2a.json&& nodemon server.js --watch-game",
         "start": "node server.js",
-        "deploy": "cd dist && gcloud app deploy",
+        "deploy": "gcloud datastore create-indexes index.yaml && cd dist && gcloud app deploy",
         "tail": "gcloud app logs tail -s default",
         "prebuild": "rimraf dist",
         "build": "node build.js"
@@ -17,7 +17,8 @@
     "dependencies": {
         "express": "^4.16.3",
         "express-cache-controller": "^1.1.0",
-        "@google-cloud/datastore": "^1.4.2"
+        "@google-cloud/datastore": "^1.4.2",
+        "morgan": "^1.9.0"
     },
     "devDependencies": {
         "body-parser": "1.18.3",
