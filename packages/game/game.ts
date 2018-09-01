@@ -16,6 +16,6 @@ const game = new Game({
             debug: false
         }
     },
-    backgroundColor: '#055f19',
+    backgroundColor: '#815b4d',
     scene: new LobbyScene(userId)
 });

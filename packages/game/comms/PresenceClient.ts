@@ -10,15 +10,15 @@ const POLL_INTERVAL = 10 * 1000;
 export class PresenceClient extends Model {
     private intervals: number[] = [];
     private presentUsers: PresenceMessage[] = [];
-    constructor(userId: string, private onUpdate: (users: PresenceMessage[]) => void){
+    constructor(private userId: string, private onUpdate: (users: PresenceMessage[]) => void){
         super('presence');
-        const announce = () => this.upsert(userId, { userId });
+        const announce = () => this.upsert(userId, { userId, presence : 'present' });
 
         const announceInterval = window.setInterval(announce, ANNOUNCE_INTERVAL);
         this.intervals.push(announceInterval);
 
         const poll = async () => {
-            const newPresentUsers = await this.all();
+            const newPresentUsers = await this.query({ presence : 'present' });
             const myIndex = newPresentUsers.indexOf(newPresentUsers.find(u => u.userId === userId ));
             if(myIndex !== -1){
                 newPresentUsers.splice(myIndex, 1);
@@ -42,5 +42,8 @@ export class PresenceClient extends Model {
     }
     close(){
         this.intervals.forEach(i => window.clearInterval(i));
+    }
+    away(){
+        this.upsert(this.userId, { userId: this.userId, presence : 'away' });
     }
 }

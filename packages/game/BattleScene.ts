@@ -11,7 +11,10 @@ export class BattleScene extends Scene {
     }
     onMessage(message){
         switch(message.type){
+            case 'echo_click': {
 
+                break;
+            }
         }
     }
     preload() {
@@ -46,7 +49,6 @@ export class BattleScene extends Scene {
 
         const playerGroup = this.physics.add.group();
         const enemyGroup = this.physics.add.group();
-        
         
         const allyX = 100;
         const tanksStartY = 300;
@@ -122,6 +124,7 @@ export class BattleScene extends Scene {
             }
         });
     }
+    
     update() {
         this.allTanks.forEach(t => t.update()); 
         // todo use...

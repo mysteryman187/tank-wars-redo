@@ -2,6 +2,7 @@ import { Physics, Scene, Math as PMath } from 'phaser';
 import { BattleScene } from './BattleScene';
 
 import * as debounce from 'lodash.debounce';
+import { Connection } from './comms/Connection';
 
 const { cos, sin } = Math;
 const { Angle, RadToDeg, DegToRad } = PMath;
@@ -39,7 +40,7 @@ export class Tank extends Phaser.Events.EventEmitter {
 
     private timer:Phaser.Time.TimerEvent;
 
-    constructor(private scene: BattleScene, public playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group) {
+    constructor(private scene: BattleScene, public playerTank: boolean, x: number, y: number, type: 'hotchkiss' | 'panzer', private otherTanksGroup: Physics.Arcade.Group, private connection:Connection) {
         super();
         this.aimAtTarget = this.aimAtTarget.bind(this);
         this.fire = debounce(this.fire, FIRE_RATE, { maxWait: FIRE_RATE, leading: true });

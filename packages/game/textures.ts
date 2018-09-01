@@ -1,5 +1,19 @@
 import { Scene } from 'phaser';
 
+export const lobbyRectangle = (scene:Scene) => {
+    const graphics = scene.add.graphics();
+    graphics.clear();
+    graphics.lineStyle(2, 0x111111, 1);
+
+    const { width } = scene.cameras.main;
+    const height = 480;
+    graphics.strokeRect(0, 0, width - 100, height );
+    graphics.generateTexture('lobby-rect', width, height)
+    graphics.clear();
+    graphics.destroy();
+}
+
+
 export const selectedRectangle = (scene:Scene) => {
     const graphics = scene.add.graphics();
     graphics.clear();

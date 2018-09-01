@@ -18,14 +18,16 @@ const createRoute = (kind, options) => {
      * Query
      */
     router.get(`/${kind}/query`, (req, res) => {
-        const q = datastore.createQuery([kind]);
+        const datastoreQuery = datastore.createQuery([kind]);
         if (options.ttl) {
-            q.filter('timestamp', '>', Date.now() - options.ttl);
+            datastoreQuery.filter('timestamp', '>', Date.now() - options.ttl);
         }
-        if (options.query && options.query.filter) {
-            options.query.filter(q, qs.parse(req.query));
-        }
-        datastore.runQuery(q, (err, entities, nextQuery) => {
+        const queryParams = qs.parse(req.query);
+        Object.keys(queryParams).forEach((key) => {
+            datastoreQuery.filter(key, '=', queryParams[key]);
+        });
+        
+        datastore.runQuery(datastoreQuery, (err, entities, nextQuery) => {
             if (err) {
                 console.error(err);
                 res.statusCode = 500;

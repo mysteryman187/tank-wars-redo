@@ -24,14 +24,7 @@ app.use(createRoute('presence', {
 
  app.use(createRoute('message', {
     projectId: 'tank-wars-211122',
-    ttl: 60 * 1000,
-    query: {
-        filter: (query, queryParams) => {
-            Object.keys(queryParams).forEach((key) => {
-                query.filter(key, '=', queryParams[key]);
-            });
-        }
-    }
+    ttl: 60 * 1000
  }));
 
 if (process.argv.indexOf('--watch-game') !== -1) {

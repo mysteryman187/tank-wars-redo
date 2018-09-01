@@ -4,3 +4,8 @@ indexes:
   properties:
     - name: recipient
     - name: timestamp
+
+- kind: presence
+  properties:
+    - name: presence
+    - name: timestamp

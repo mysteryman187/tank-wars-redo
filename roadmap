@@ -1,3 +1,36 @@
 
+
+theme the lobby
+    - epic lobby music(think pubg)
+
+lobby map
+    - when someone joins we plot the location on a map(this might actually be useful since its p2p! you cant connect to a dude in brazil!)
+
+devrig
+    - ability to spin up a single player game with no need to use the lobby (its far too slow for development)
+    - ability to use websockets on the development server to connect the lobby(again its too fucking slow)
+
+
 ability to view stats of the dude whos challenging me (add a /stats thing with wins/losses)
-when joining a game delete my presence message
+
+Multiplayer game
+    -ability to move a tank using the connection
+        - basic impl only sends clicks(and will be prone to desync and differing outcomes)
+        - next impl needs to be doing "only i say when i die or am hit"
+
+publish the gcloud express wrapper thing to npm
+    - can probably make it generic so you can dynamically send any kind
+    - that kinda needs to be optional though
+    - makes config more like app.use('/data', models({
+        projectId: 'foo',
+        kinds: ['kind1', 'kind2']
+        // or
+        kinds: [{ 
+            kind: 'kind1',
+            ttl: 1000
+        }]
+        // or omit kinds and dynamic kinds is default..use a regex or something
+    }
+
+
+

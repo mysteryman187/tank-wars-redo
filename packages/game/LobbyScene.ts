@@ -3,6 +3,7 @@ import { PresenceClient } from './comms/PresenceClient';
 import { MessageClient } from './comms/MessageClient';
 import { Connection } from './comms/Connection';
 import { BattleScene } from './BattleScene';
+import { lobbyRectangle } from './textures';
 
 export class LobbyScene extends Scene {
     private texts: any [] = [];
@@ -14,6 +15,8 @@ export class LobbyScene extends Scene {
         super(null);
     }
     preload() {
+        this.load.image('lobby-background', 'assets/images/lobby_bg.png');
+        lobbyRectangle(this);
         this.scene.add('battle', BattleScene, false);
         console.log('lobby preload');
     }
@@ -37,6 +40,12 @@ export class LobbyScene extends Scene {
         }
     }
     create() {
+        window.onbeforeunload  = this.destroy.bind(this);
+
+        this.add.image(0, 0, 'lobby-background')
+        .setOrigin(0)
+        .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
+
         this.messageClient = new MessageClient(this.userId, (message) => {
             switch(message.type){
                 case 'challenge': {
@@ -70,22 +79,30 @@ export class LobbyScene extends Scene {
 
         this.presenceClient = new PresenceClient(this.userId, (presentUsers) => {
             console.log('update UsSers', presentUsers)
-            this.texts.forEach(text => text.destroy());
+            this.texts.forEach(textArray => textArray.forEach(text => text.destroy()));
             this.texts = presentUsers.map((u, i) => {
-                const text = this.add.text(16, 32 * i, u.userId, { fontSize: '32px', fill: '#000' }).setInteractive();
+                const normalStyle = { fontSize: '42px', fill: '#444444', fontFamily: 'handwritten' };
+                const hoverStyle = { fontSize: '45px', fill: '#444444', fontFamily: 'handwritten' };
+                
+                const y = 300 + (40 * i);
+                const rankText = this.add
+                .text(160, y , 'pvt', normalStyle)
+               
+                const text = this.add
+                .text(400, y, u.userId, normalStyle)
+                .setInteractive();
+
                 text.on('pointerdown', (pointer) => {
                     this.messageClient.send(u.userId, { type: 'challenge', from: this.userId });
                 });
 
                 text.on('pointerover', (pointer) => {
-                    text.setStyle( { fontSize: '36px' });
-                    text.setTint(0xff0000);
+                    text.setStyle(hoverStyle);
                 });
                 text.on('pointerout', (pointer) => {
-                    text.setStyle( { fontSize: '32px' });
-                    text.setTint(0xff0000);
+                    text.setStyle(normalStyle);
                 });
-                return text;
+                return [ text, rankText ] ;
             });
         });
     }
@@ -93,6 +110,7 @@ export class LobbyScene extends Scene {
     }
 
     destroy(){
+        this.presenceClient.away();
         this.presenceClient.close();
         this.messageClient.close();
     }
