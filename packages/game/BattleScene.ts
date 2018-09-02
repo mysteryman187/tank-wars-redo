@@ -9,6 +9,7 @@ export class BattleScene extends Scene {
     private allies: Tank[] = [];
     private germans: Tank[] = [];
     private isPlayerGerman: boolean;
+    private pointerdown: boolean = false;
 
     private connection: Connection;
     constructor() {
@@ -68,14 +69,14 @@ export class BattleScene extends Scene {
         const playerGroup = this.physics.add.group();
         const enemyGroup = this.physics.add.group();
         const halfGameWidth = (1440 / 2);
-        const allyX = halfGameWidth + 100;
+        const allyX = halfGameWidth + 200;
         const tanksStartY = 300;
         const spaceBetwen = 120;
         for (let t = 1; t <= numTanks; t++) {
             makeTank(allyX, tanksStartY + (t * spaceBetwen), 'hotchkiss', this.allies, !isPlayerGerman);
         }
 
-        const germansX = 1440 + halfGameWidth - 100;
+        const germansX = 1440 + halfGameWidth - 200;
         let yMax = 0;
         for (let t = 1; t <= numTanks; t++) {
             yMax = tanksStartY + (t * spaceBetwen);
@@ -84,9 +85,9 @@ export class BattleScene extends Scene {
         this.cameras.main.setBounds(0, 0, 1440 * 2, 1500, true);
 
         if (isPlayerGerman) {
-            // this.cameras.main.scrollX = germansX - (this.physics.world.bounds.width / 2);
+            this.cameras.main.scrollX += (halfGameWidth - 400);// = germansX - (this.physics.world.bounds.width / 2);
         } else {
-            //this.cameras.main.scrollX = allyX - (this.physics.world.bounds.width / 2);               
+            this.cameras.main.scrollX -= (halfGameWidth + 400);// = allyX - (this.physics.world.bounds.width / 2);               
         }
 
 
@@ -105,21 +106,25 @@ export class BattleScene extends Scene {
             this.resolveTank(b).setVelocity(0);
         });
 
-        // var cursors = this.input.keyboard.createCursorKeys();
-        // var controlConfig = {
-        //     camera: this.cameras.main,
-        //     left: cursors.left,
-        //     right: cursors.right,
-        //     up: cursors.up,
-        //     down: cursors.down,
-        //     acceleration: 0.06,
-        //     drag: 0.0005,
-        //     maxSpeed: 1.0
-        // };
-        // const controls = new Phaser.Cameras.Controls.FixedKeyControl(controlConfig);
+        let startPos;
+        this.input.on('pointerup', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
+            this.pointerdown = false;
+        });
 
+        this.input.on('pointermove', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
+            if (this.sys.game.device.input.touch && this.pointerdown) {
+                // scroll camera on mobile only
+                const moveXBy = startPos.x - pointer.position.x;
+                const moveYBy = startPos.y - pointer.position.y;
+                this.cameras.main.setScroll(startPos.scrollX + moveXBy, startPos.scrollY + moveYBy);
+            }
+        });
 
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
+            this.pointerdown = true;
+            const { x, y } = pointer.position;
+            startPos = { x, y, scrollX: this.cameras.main.scrollX, scrollY: this.cameras.main.scrollY };
+
             const tanksSelected = this.myTanks().filter(tank => tank.selected);
             if (gameObjects.length) {
                 const tankClicked = this.resolveTank(gameObjects[0])
@@ -165,20 +170,26 @@ export class BattleScene extends Scene {
 
     update() {
         this.allTanks.forEach(t => t.update());
-        const { position } = this.input.activePointer;
-        const camera = this.cameras.main;
-        const THRESHOLD = 50;
-        const SCROLL_SPEED = 5;
-        if (position.x < THRESHOLD) {
-            camera.scrollX -= SCROLL_SPEED;
-        } else if (position.x > camera.width - THRESHOLD) {
-            camera.scrollX += SCROLL_SPEED;
-        }
+        this.scrollCamera();
+    }
 
-        if (position.y < THRESHOLD) {
-            camera.scrollY -= SCROLL_SPEED;
-        } else if (position.y > camera.height - THRESHOLD) {
-            camera.scrollY += SCROLL_SPEED;
+    scrollCamera() {
+        const camera = this.cameras.main;
+        if (!this.sys.game.device.input.touch) {
+            const { position } = this.input.activePointer;
+            const THRESHOLD = 50;
+            const SCROLL_SPEED = 5;
+            if (position.x < THRESHOLD) {
+                camera.scrollX -= SCROLL_SPEED;
+            } else if (position.x > camera.width - THRESHOLD) {
+                camera.scrollX += SCROLL_SPEED;
+            }
+
+            if (position.y < THRESHOLD) {
+                camera.scrollY -= SCROLL_SPEED;
+            } else if (position.y > camera.height - THRESHOLD) {
+                camera.scrollY += SCROLL_SPEED;
+            }
         }
     }
 

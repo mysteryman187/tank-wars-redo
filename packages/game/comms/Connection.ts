@@ -8,15 +8,33 @@ export class Connection {
         public onMessage: (message) => void,
         private onReady?: () => void,
     ) {
-        this.rtcPeerConnection = new RTCPeerConnection(null);
+        const config: RTCConfiguration = {
+            iceServers: [{
+                urls: [
+                    'stun:66.102.1.127:19302',
+                    'stun:[2a00:1450:400c:c06::7f]:19302'
+                ]
+            },
+            {
+                urls: [
+                    'turn:74.125.140.127:19305?transport=udp',
+                    'turn:[2a00:1450:400c:c08::7f]:19305?transport=udp',
+                    'turn:74.125.140.127:19305?transport=tcp',
+                    'turn:[2a00:1450:400c:c08::7f]:19305?transport=tcp'
+                ],
+                username: 'CKL6ttwFEgb+iCD4CYEYzc/s6OMTIICjBQ',
+                credential: '7Wmakx6hnrMQ1epAT3kEoCfvhek='
+            }]
+        };
+        this.rtcPeerConnection = new RTCPeerConnection(config);
         this.sendChannel = this.rtcPeerConnection.createDataChannel('sendDataChannel');
         this.rtcPeerConnection.onicecandidate = event => transportICECandidate(event.candidate);
-        this.rtcPeerConnection.ondatachannel = ({channel}) => {
+        this.rtcPeerConnection.ondatachannel = ({ channel }) => {
             channel.onopen = () => {
                 console.log('datachannel established!');
                 this.onReady && this.onReady();
             }
-            channel.onmessage = ({data}) => {
+            channel.onmessage = ({ data }) => {
                 const message = JSON.parse(data);
                 this.onMessage(message);
             }
@@ -24,9 +42,9 @@ export class Connection {
     }
 
     public async receiveICECandidate(candidate: RTCIceCandidate) {
-        try{
+        try {
             await this.rtcPeerConnection.addIceCandidate(candidate);
-        }catch(e){
+        } catch (e) {
             console.warn('dodgy ICE candidate');
         }
     }
@@ -47,7 +65,7 @@ export class Connection {
     public async receiveAnswer(sessionDescription: RTCSessionDescriptionInit) {
         await this.rtcPeerConnection.setRemoteDescription(sessionDescription);
     }
-    public send(obj){
+    public send(obj) {
         this.sendChannel.send(JSON.stringify(obj));
     }
 }
