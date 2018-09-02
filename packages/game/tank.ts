@@ -189,7 +189,7 @@ export class Tank extends Phaser.Events.EventEmitter {
         }
         this.tankMoveGameObject.destroy();
         this.rangeCircle.destroy();
-        this.scene.removeTank(this);
+        this.scene.destroyTank(this);
         if(this.timer){
             this.timer.paused = true;
             this.timer.destroy();

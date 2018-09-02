@@ -1,22 +1,23 @@
 
 
 theme the lobby
+    - challenge dialog
+    - game connecting spinner/dialog
     - epic lobby music(think pubg)
 
 lobby map
     - when someone joins we plot the location on a map(this might actually be useful since its p2p! you cant connect to a dude in brazil!)
 
 devrig
-    - ability to spin up a single player game with no need to use the lobby (its far too slow for development)
-    - ability to use websockets on the development server to connect the lobby(again its too fucking slow)
-
+    - ability to use websockets on the development server to connect the lobby(its too fucking slow)(wontfix high effort)
 
 ability to view stats of the dude whos challenging me (add a /stats thing with wins/losses)
 
 Multiplayer game
-    -ability to move a tank using the connection
-        - basic impl only sends clicks(and will be prone to desync and differing outcomes)
+        - basic impl only sends clicks(and will be prone to desync and differing outcomes) - done
         - next impl needs to be doing "only i say when i die or am hit"
+        - we also need to send our location..prety much constantly (probably in the update lok but debounced?)
+        - also send out actions and targets(thats a real bug just now - we rely 100% on AI doing same things based on actions)
 
 publish the gcloud express wrapper thing to npm
     - can probably make it generic so you can dynamically send any kind
@@ -32,5 +33,9 @@ publish the gcloud express wrapper thing to npm
         // or omit kinds and dynamic kinds is default..use a regex or something
     }
 
+
+bugs
+ - tank wont retarget after killing current target
+ - tanks colliding is a super basic impl and is shit and they get stuck all the time
 
 

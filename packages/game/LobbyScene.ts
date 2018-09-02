@@ -4,20 +4,24 @@ import { MessageClient } from './comms/MessageClient';
 import { Connection } from './comms/Connection';
 import { BattleScene } from './BattleScene';
 import { lobbyRectangle } from './textures';
+import { username } from './username';
 
 export class LobbyScene extends Scene {
     private texts: any [] = [];
     private connection: Connection;
     private messageClient: MessageClient;
     private presenceClient: PresenceClient;
+    private userId: string = username;
 
-    constructor(private userId: string) {
+    constructor() {
         super(null);
     }
     preload() {
         this.load.image('lobby-background', 'assets/images/lobby_bg.png');
+        this.load.image('lobby-map', 'assets/images/map.jpg');
+        
         lobbyRectangle(this);
-        this.scene.add('battle', BattleScene, false);
+       
         console.log('lobby preload');
     }
     createConnection(userId, connect){
@@ -42,9 +46,13 @@ export class LobbyScene extends Scene {
     create() {
         window.onbeforeunload  = this.destroy.bind(this);
 
+        const centre = this.cameras.main.width / 2;
         this.add.image(0, 0, 'lobby-background')
         .setOrigin(0)
-        .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
+        .setDisplaySize(centre, this.cameras.main.height);
+        this.add.image(centre, 0, 'lobby-map')
+        .setOrigin(0)
+        .setDisplaySize(centre, this.cameras.main.height);
 
         this.messageClient = new MessageClient(this.userId, (message) => {
             switch(message.type){
@@ -81,15 +89,15 @@ export class LobbyScene extends Scene {
             console.log('update UsSers', presentUsers)
             this.texts.forEach(textArray => textArray.forEach(text => text.destroy()));
             this.texts = presentUsers.map((u, i) => {
-                const normalStyle = { fontSize: '42px', fill: '#444444', fontFamily: 'handwritten' };
-                const hoverStyle = { fontSize: '45px', fill: '#444444', fontFamily: 'handwritten' };
+                const normalStyle = { fontSize: '36px', fill: '#444444', fontFamily: 'handwritten' };
+                const hoverStyle = { fontSize: '38px', fill: '#444444', fontFamily: 'handwritten' };
                 
-                const y = 300 + (40 * i);
+                const y = 180 + (40 * i);
                 const rankText = this.add
-                .text(160, y , 'pvt', normalStyle)
+                .text(100, y , 'pvt', normalStyle)
                
                 const text = this.add
-                .text(400, y, u.userId, normalStyle)
+                .text(270, y, u.userId, normalStyle)
                 .setInteractive();
 
                 text.on('pointerdown', (pointer) => {

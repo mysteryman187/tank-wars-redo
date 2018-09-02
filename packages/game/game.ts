@@ -1,14 +1,17 @@
 import { Game, AUTO, Scene } from 'phaser';
 import { BattleScene } from './BattleScene';
 import { LobbyScene } from './LobbyScene';
+import * as qs from 'qs';
 
-var generateUsername = require('project-name-generator');
-const userId = window.localStorage['tank-wars.userId'] || generateUsername().dashed;
+//debugger;
+const dev = Object.keys(qs.parse(window.location.search.substring(1,window.location.search.length))).includes('dev');
+
+console.log('===dev=', dev);
 
 const game = new Game({
     type: AUTO,
-    width: 1024,
-    height: 1024,
+    width: 1440,
+    height: 640,
     physics: {
         default: 'arcade',
         arcade: {
@@ -17,5 +20,8 @@ const game = new Game({
         }
     },
     backgroundColor: '#815b4d',
-    scene: new LobbyScene(userId)
+    scene: dev ? BattleScene: LobbyScene
 });
+
+game.scene.add('lobby', LobbyScene, false);
+game.scene.add('battle', BattleScene, false);

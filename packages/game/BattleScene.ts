@@ -2,17 +2,30 @@ import { Scene, Math, Physics } from 'phaser';
 import { Tank, RANGE } from './tank';
 import { selectedRectangle, rangeCircle, projectile, generateHealthBars } from './textures';
 import { Connection } from './comms/Connection';
+import { LobbyScene } from './LobbyScene';
 
 export class BattleScene extends Scene {
     private allTanks: Tank[] = [];
+    private allies: Tank[] = [];
+    private germans: Tank[] = [];
+    private isPlayerGerman: boolean;
+
     private connection: Connection;
     constructor() {
         super(null);
     }
-    onMessage(message){
-        switch(message.type){
-            case 'echo_click': {
-
+    onMessage(message) {
+        switch (message.type) {
+            case 'echo_move': {
+                const tank = this.enemyTanks()[message.index];
+                tank.driveTo(message.worldX, message.worldY);
+                break;
+            }
+            case 'echo_target': {
+                const { index, targetIndex } = message;
+                const tank = this.enemyTanks()[index];
+                const target = this.myTanks()[targetIndex];
+                tank.setTarget(target);
                 break;
             }
         }
@@ -28,20 +41,25 @@ export class BattleScene extends Scene {
         projectile(this);
         generateHealthBars(this);
     }
-
-    create({ connection, numTanks =  8, isPlayerGerman }) {
+    myTanks() {
+        return this.isPlayerGerman ? this.germans : this.allies;
+    }
+    enemyTanks() {
+        return this.isPlayerGerman ? this.allies : this.germans;
+    }
+    create({ connection, numTanks = 7, isPlayerGerman }) {
         this.connection = connection;
-        connection.onMessage = this.onMessage;
+        if (connection) {
+            connection.onMessage = message => this.onMessage(message);
+        }
+        this.isPlayerGerman = isPlayerGerman;
 
-        const allies = [];
-        const germans = [];
-        const myTanks = () => isPlayerGerman ? germans : allies;
         const makeTank = (x, y, type, ar, playerTank) => {
-            const tank = new Tank(this, playerTank, x, y, type, playerTank ? enemyGroup : playerGroup);
+            const tank = new Tank(this, playerTank, x, y, type, playerTank ? enemyGroup : playerGroup, connection);
             ar.push(tank);
-            if(playerTank){
+            if (playerTank) {
                 playerGroup.add(tank.chassis);
-            }else{
+            } else {
                 enemyGroup.add(tank.chassis);
             }
             this.allTanks.push(tank);
@@ -49,25 +67,26 @@ export class BattleScene extends Scene {
 
         const playerGroup = this.physics.add.group();
         const enemyGroup = this.physics.add.group();
-        
-        const allyX = 100;
+        const halfGameWidth = (1440 / 2);
+        const allyX = halfGameWidth + 100;
         const tanksStartY = 300;
-        for(let t = 1; t <= numTanks; t++){
-            makeTank(allyX, tanksStartY + (t * 100), 'hotchkiss', allies, !isPlayerGerman);
+        const spaceBetwen = 120;
+        for (let t = 1; t <= numTanks; t++) {
+            makeTank(allyX, tanksStartY + (t * spaceBetwen), 'hotchkiss', this.allies, !isPlayerGerman);
         }
-        
-        const germansX = (this.physics.world.bounds.width * 2) - 100;
-        let yMax = 0;
-        for(let t = 1; t <= numTanks; t++){
-            yMax = tanksStartY + (t * 100);
-            makeTank(germansX, yMax, 'panzer', germans, isPlayerGerman);
-        }
-        this.cameras.main.setBounds(0, 0, germansX + 100, yMax + 100);
 
-        if(isPlayerGerman){
-            this.cameras.main.scrollX = germansX - (this.physics.world.bounds.width / 2);
-        }else{
-            this.cameras.main.scrollX = allyX - (this.physics.world.bounds.width / 2);               
+        const germansX = 1440 + halfGameWidth - 100;
+        let yMax = 0;
+        for (let t = 1; t <= numTanks; t++) {
+            yMax = tanksStartY + (t * spaceBetwen);
+            makeTank(germansX, yMax, 'panzer', this.germans, isPlayerGerman);
+        }
+        this.cameras.main.setBounds(0, 0, 1440 * 2, 1500, true);
+
+        if (isPlayerGerman) {
+            // this.cameras.main.scrollX = germansX - (this.physics.world.bounds.width / 2);
+        } else {
+            //this.cameras.main.scrollX = allyX - (this.physics.world.bounds.width / 2);               
         }
 
 
@@ -101,42 +120,99 @@ export class BattleScene extends Scene {
 
 
         this.input.on('pointerdown', (pointer, gameObjects: Physics.Arcade.Sprite[]) => {
-            const tanksSelected = myTanks().filter(tank => tank.selected);
-            if(gameObjects.length){
+            const tanksSelected = this.myTanks().filter(tank => tank.selected);
+            if (gameObjects.length) {
                 const tankClicked = this.resolveTank(gameObjects[0])
 
-                if(tankClicked.playerTank){
+                if (tankClicked.playerTank) {
                     // my tank clicked
-                    if(tanksSelected.length === 0){
+                    if (tanksSelected.length === 0) {
                         tankClicked.selected = true;
-                    }else if(tanksSelected.length){
+                    } else if (tanksSelected.length) {
                         tanksSelected.forEach(tank => tank.selected = false);
                         tankClicked.selected = true;
                     }
-                }else {
+                } else {
                     // enemy tank clicked
-                    tanksSelected.forEach(tank => tank.setTarget(tankClicked));
+                    tanksSelected.forEach(tank => {
+                        const index = this.myTanks().indexOf(tank);
+                        const targetIndex = this.enemyTanks().indexOf(tankClicked);
+                        if (index !== -1 && targetIndex !== -1) {
+                            this.send({ type: 'echo_target', index, targetIndex });
+                        }
+                        tank.setTarget(tankClicked);
+                    });
                 }
             } else {
                 // nothing clicked so move to clicked location
                 const { worldX, worldY } = pointer;
-                tanksSelected.forEach(tank => tank.driveTo(worldX, worldY));
+                tanksSelected.forEach(tank => {
+                    const index = this.myTanks().indexOf(tank);
+                    if (index !== -1) {
+                        this.send({ type: 'echo_move', index, worldX, worldY });
+                    }
+                    tank.driveTo(worldX, worldY);
+                });
             }
         });
     }
-    
-    update() {
-        this.allTanks.forEach(t => t.update()); 
-        // todo use...
-         console.log(this.input.activePointer.position);
-        // to move the camera.scroll.x and such when near boundary
+
+    send(message) {
+        if (this.connection) {
+            this.connection.send(message);
+        }
     }
 
-    public resolveTank(chassis):Tank{
+    update() {
+        this.allTanks.forEach(t => t.update());
+        const { position } = this.input.activePointer;
+        const camera = this.cameras.main;
+        const THRESHOLD = 40;
+        const SCROLL_SPEED = 5;
+        if (position.x < THRESHOLD) {
+            camera.scrollX -= SCROLL_SPEED;
+        } else if (position.x > camera.width - THRESHOLD) {
+            camera.scrollX += SCROLL_SPEED;
+        }
+
+        if (position.y < THRESHOLD) {
+            camera.scrollY -= SCROLL_SPEED;
+        } else if (position.y > camera.height - THRESHOLD) {
+            camera.scrollY += SCROLL_SPEED;
+        }
+    }
+
+    public resolveTank(chassis): Tank {
         return this.allTanks.find(tank => tank.chassis === chassis);
     }
-    public removeTank(tank:Tank){
+    public destroyTank(tank: Tank) {
+        // WARNING - THIS SEEMS TO MESS WITH MESSAGES(NOT SURE IF COMMENTING THIS OUT WILL EVEN RESOLVE FUNDAMENTAL ISSUE!)
+        // const removePlayerArray = (ar) => {
+        //     const index = ar.indexOf(tank);
+        //     if (index !== -1) {
+        //         ar.splice(index, 1);
+        //     }
+        // }
+        // if (tank.playerTank) {
+        //     removePlayerArray(this.myTanks());
+        // } else {
+        //     removePlayerArray(this.enemyTanks());
+        // }
         this.allTanks = this.allTanks.filter(t => t !== tank);
+        this.maybeWinLose();
+    }
+
+    maybeWinLose() {
+        const win = this.allTanks.every(tank => tank.playerTank);
+        const lose = this.allTanks.every(tank => !tank.playerTank);
+        if (win) {
+            // todo dialog or something
+            this.scene.start('lobby');
+        }
+        else if (lose) {
+            // todo dialog or something
+            this.scene.start('lobby');
+        }
     }
 
 }
