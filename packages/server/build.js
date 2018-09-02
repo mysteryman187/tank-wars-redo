@@ -4,6 +4,7 @@ const copy = require('copy');
 rimraf.sync('dist');
 
 [
+    'models.js',
     'server.js',
     'app.yaml',
     'package.json'

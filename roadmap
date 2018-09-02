@@ -1,9 +1,14 @@
 
+use some stunt servers so it works outside of LANS
 
 theme the lobby
-    - challenge dialog
+    - challenge dialog(make a morse code sound effect when you get one)
+    - challenge declined msg (toast not dialog also which has morse code sound)
     - game connecting spinner/dialog
     - epic lobby music(think pubg)
+    - ability to change user name
+    - do something with the map/right space
+    - better text than "enlist here"
 
 lobby map
     - when someone joins we plot the location on a map(this might actually be useful since its p2p! you cant connect to a dude in brazil!)
@@ -33,9 +38,19 @@ publish the gcloud express wrapper thing to npm
         // or omit kinds and dynamic kinds is default..use a regex or something
     }
 
+gameplay
+    - we really need buildings/scenery, now that we can scroll about its very easy to get lost in blankness
 
 bugs
- - tank wont retarget after killing current target
+ - tank wont retarget after killing current target(actually it does seem to)
  - tanks colliding is a super basic impl and is shit and they get stuck all the time
+ - german tank turret offset is wonky when facing chassis left
 
+
+Mobile
+    - making canvas size work/fit and look right zoom
+    - add to home screen
+    - offline/asset caches?
+    - fullscreen?
+    - swipe to scroll the camera(on mobile only)
 

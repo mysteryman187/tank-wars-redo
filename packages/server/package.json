@@ -15,17 +15,17 @@
         "build": "node build.js"
     },
     "dependencies": {
+        "body-parser": "1.18.3",
         "express": "^4.16.3",
         "express-cache-controller": "^1.1.0",
         "@google-cloud/datastore": "^1.4.2",
-        "morgan": "^1.9.0"
+        "morgan": "^1.9.0",
+        "qs": "6.5.2"
     },
     "devDependencies": {
-        "body-parser": "1.18.3",
         "copy": "^0.3.2",
         "nodemon": "^1.18.4",
         "tank-wars-redo-game": "1.0.0",
-        "qs": "6.5.2",
         "rimraf": "^2.6.2",
         "webpack": "^4.16.1",
         "webpack-dev-middleware": "^3.1.3"

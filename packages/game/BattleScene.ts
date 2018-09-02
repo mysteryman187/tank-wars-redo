@@ -167,7 +167,7 @@ export class BattleScene extends Scene {
         this.allTanks.forEach(t => t.update());
         const { position } = this.input.activePointer;
         const camera = this.cameras.main;
-        const THRESHOLD = 40;
+        const THRESHOLD = 50;
         const SCROLL_SPEED = 5;
         if (position.x < THRESHOLD) {
             camera.scrollX -= SCROLL_SPEED;
