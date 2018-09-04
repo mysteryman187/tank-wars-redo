@@ -4325,6 +4325,10 @@ morgan@^1.9.0:
     on-finished "~2.3.0"
     on-headers "~1.0.1"
 
+morsify@0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/morsify/-/morsify-0.5.2.tgz#43eb312e5d8bce70948c39a4a86e23163690cb50"
+
 move-concurrently@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/move-concurrently/-/move-concurrently-1.0.1.tgz#be2c005fda32e0b29af1f05d7c4b33214c701f92"

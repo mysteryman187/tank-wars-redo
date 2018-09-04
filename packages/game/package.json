@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "lodash.debounce": "^4.0.8",
+    "morsify":"0.5.2",
     "phaser": "^3.11.0",
     "qs": "^6.5.2",
     "uuid":"^3.3.2",

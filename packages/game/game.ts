@@ -1,12 +1,16 @@
 import { Game, AUTO, Scene } from 'phaser';
 import { BattleScene } from './BattleScene';
 import { LobbyScene } from './LobbyScene';
+import { LoadingScene } from './LoadingScene';
+
 import * as qs from 'qs';
 
 
 const params = qs.parse(window.location.search.substring(1, window.location.search.length));
 const dev = Object.keys(params).includes('dev');
 const german = Object.keys(params).includes('german');
+const tanks = Object.keys(params).includes('tanks');
+var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
 
 console.log('===dev=', dev);
 
@@ -29,10 +33,11 @@ const game = new Game({
 
 game.scene.add('lobby', LobbyScene, false);
 game.scene.add('battle', BattleScene, false);
+game.scene.add('loading-battle', LoadingScene, false);
 
 if(dev){
     game.scene.start('battle', { 
-        numTanks: 3,
+        numTanks: tanks || 3,
         isPlayerGerman: german
     });
 } else {
@@ -63,4 +68,6 @@ modal.addEventListener('click', fullscreen);
 modal.addEventListener('touchend', fullscreen);
 
 
-promptFullScreen();
+if(!isSafari){
+    promptFullScreen();
+}

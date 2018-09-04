@@ -47,12 +47,11 @@ bugs
  - tank wont retarget after killing current target(actually it does seem to)
  - tanks colliding is a super basic impl and is shit and they get stuck all the time
  - german tank turret offset is wonky when facing chassis left
+ - turn server wont always work - we could have a fallback relay? (but we need websockets for that)
 
 
 Mobile
     - making canvas size work/fit and look right zoom
     - add to home screen
     - offline/asset caches?
-    - fullscreen?
-    - swipe to scroll the camera(on mobile only)
 

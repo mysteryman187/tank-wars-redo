@@ -1,13 +1,17 @@
+import { EventEmitter } from 'events';
 
 export class Connection {
     private rtcPeerConnection: RTCPeerConnection;
     private sendChannel: RTCDataChannel;
+    private emitter: EventEmitter = new EventEmitter();
+
     constructor(transportICECandidate: (candidate: RTCIceCandidate) => void,
         private transportOffer: (description: RTCSessionDescriptionInit) => void,
         private transportAnswer: (description: RTCSessionDescriptionInit) => void,
         public onMessage: (message) => void,
-        private onReady?: () => void,
+        onReady?: () => void,
     ) {
+        this.onReady(onReady);
         const config: RTCConfiguration = {
             iceServers: [{
                 urls: [
@@ -32,7 +36,7 @@ export class Connection {
         this.rtcPeerConnection.ondatachannel = ({ channel }) => {
             channel.onopen = () => {
                 console.log('datachannel established!');
-                this.onReady && this.onReady();
+                this.emitter.emit('ready');
             }
             channel.onmessage = ({ data }) => {
                 const message = JSON.parse(data);
@@ -67,6 +71,9 @@ export class Connection {
     }
     public send(obj) {
         this.sendChannel.send(JSON.stringify(obj));
+    }
+    public onReady(callback){
+        this.emitter.on('ready', callback);
     }
 }
 

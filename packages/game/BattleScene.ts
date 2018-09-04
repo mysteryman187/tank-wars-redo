@@ -10,7 +10,8 @@ export class BattleScene extends Scene {
     private germans: Tank[] = [];
     private isPlayerGerman: boolean;
     private pointerdown: boolean = false;
-
+    private gameOver: boolean = false;
+    
     private connection: Connection;
     constructor() {
         super(null);
@@ -85,7 +86,7 @@ export class BattleScene extends Scene {
         this.cameras.main.setBounds(0, 0, 1440 * 2, 1500, true);
 
         if (isPlayerGerman) {
-            this.cameras.main.scrollX += (halfGameWidth - 400);// = germansX - (this.physics.world.bounds.width / 2);
+            this.cameras.main.scrollX += (halfGameWidth - 400);
         } else {
             this.cameras.main.scrollX -= (halfGameWidth + 400);// = allyX - (this.physics.world.bounds.width / 2);               
         }
@@ -174,6 +175,10 @@ export class BattleScene extends Scene {
     }
 
     scrollCamera() {
+        if(this.gameOver){
+            return;
+        }
+
         const camera = this.cameras.main;
         if (!this.sys.game.device.input.touch) {
             const { position } = this.input.activePointer;
@@ -214,15 +219,26 @@ export class BattleScene extends Scene {
     }
 
     maybeWinLose() {
-        const win = this.allTanks.every(tank => tank.playerTank);
-        const lose = this.allTanks.every(tank => !tank.playerTank);
-        if (win) {
-            // todo dialog or something
-            this.scene.start('lobby');
-        }
-        else if (lose) {
-            // todo dialog or something
-            this.scene.start('lobby');
+        if(!this.gameOver){
+            const win = this.allTanks.every(tank => tank.playerTank);
+            const lose = this.allTanks.every(tank => !tank.playerTank);
+            this.gameOver = win || lose;
+            if(this.gameOver){
+                const { width, height, scrollY, scrollX } =  this.cameras.main;
+                const centre = () => ({ x: (width / 2) + scrollX, y: (height / 2) + scrollY });
+                const addText = (text) => this.add.text(centre().x, centre().y, text, { fontSize: '48px', fill: '#888888' });
+                const toLobby = () => setTimeout(() => this.scene.start('lobby'), 6000); 
+                if (win && lose) {
+                    addText('Mutual destruction!');
+                    toLobby();
+                } else if (win) {
+                    this.add.text(centre().x, centre().y, 'We have victory!');
+                    toLobby();
+                } else if (lose) {
+                    this.add.text(centre().x, centre().y, 'We have been defeated!');
+                    toLobby();
+                }
+            }
         }
     }
 
