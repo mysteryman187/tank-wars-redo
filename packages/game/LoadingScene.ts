@@ -12,8 +12,19 @@ export class LoadingScene extends Scene {
         audio.play();
         const { width, height, scrollY, scrollX } =  this.cameras.main;
         const centre = () => ({ x: (width / 2) + scrollX, y: (height / 2) + scrollY });
-        this.add.text(centre().x, centre().y, 'Establishing RTCPeerConnection...', { fontSize: '32px', fill: '#444444' })
+        
+        const text = this.add.text(centre().x, centre().y, 'Transmit Enignma Codes...', { fontSize: '32px', fill: '#444444' })
         .setOrigin(0.5, 0.5);
+
+        setTimeout(() => {
+            text.setText('Receive encryption keys...');
+            setTimeout(() => {
+                text.setText('Establish RTCPeerConnection...');
+            }, 2000);
+        }, 2000);
+
+
+
         connection.onReady(() => {
             audio.stop();
             this.scene.start('battle', {

@@ -1,16 +1,15 @@
 
-use some stunt servers so it works outside of LANS
 
 theme the lobby
     - challenge dialog(make a morse code sound effect when you get one)
     - challenge declined msg (toast not dialog also which has morse code sound)
-    - game connecting spinner/dialog (could also have morse code - since its about that fucking slow!)
-        - morse code sounds
-            - could be randomly generated with web audio since a sound effect file replaying constantly weould get annoying
     - epic lobby music(think pubg)
     - ability to change user name
     - do something with the map/right space
     - better text than "enlist here"
+
+loading screen
+    - could look better or have somethign going on
 
 lobby map
     - when someone joins we plot the location on a map(this might actually be useful since its p2p! you cant connect to a dude in brazil!)
@@ -42,6 +41,7 @@ publish the gcloud express wrapper thing to npm
 
 gameplay
     - we really need buildings/scenery, now that we can scroll about its very easy to get lost in blankness
+    - fix camera on startup so that its centred on a tank, also add some tweened arrow which disapears to indicate where to go
 
 bugs
  - tank wont retarget after killing current target(actually it does seem to)
@@ -51,7 +51,6 @@ bugs
 
 
 Mobile
-    - making canvas size work/fit and look right zoom
     - add to home screen
     - offline/asset caches?
 

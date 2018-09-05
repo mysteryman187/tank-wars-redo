@@ -58,8 +58,19 @@ export class LobbyScene extends Scene {
 
         this.messageClient = new MessageClient(this.userId, (message) => {
             switch (message.type) {
+                case 'offer': {
+                    this.connection.receiveOffer(message.offer);
+                    break;
+                }
+                case 'answer': {
+                    this.connection.receiveAnswer(message.answer);
+                    break;
+                }
+                case 'ICEcandidate': {
+                    this.connection.receiveICECandidate(message.candidate);
+                    break;
+                }
                 case 'challenge': {
-
                     const audio = morsify.audio(message.from);
                     audio.play();
 
@@ -76,18 +87,6 @@ export class LobbyScene extends Scene {
                     } else {
                         this.outstandingChallenges.set(message.from, false);
                     }
-                    break;
-                }
-                case 'offer': {
-                    this.connection.receiveOffer(message.offer);
-                    break;
-                }
-                case 'answer': {
-                    this.connection.receiveAnswer(message.answer);
-                    break;
-                }
-                case 'ICEcandidate': {
-                    this.connection.receiveICECandidate(message.candidate);
                     break;
                 }
             }
