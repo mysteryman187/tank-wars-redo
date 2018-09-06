@@ -1,5 +1,10 @@
 import { EventEmitter } from 'events';
 
+import * as qs from 'qs';
+
+const params = qs.parse(window.location.search.substring(1, window.location.search.length));
+const nostun = Object.keys(params).includes('nostun');
+
 export class Connection {
     private rtcPeerConnection: RTCPeerConnection;
     private sendChannel: RTCDataChannel;
@@ -30,6 +35,12 @@ export class Connection {
                 credential: '7Wmakx6hnrMQ1epAT3kEoCfvhek='
             }]
         };
+        if (nostun) {
+            console.log('avoid using stun/turn server');
+            delete config.iceServers;
+        } else {
+            console.log('using stun/turn server');
+        }
         this.rtcPeerConnection = new RTCPeerConnection(config);
         this.sendChannel = this.rtcPeerConnection.createDataChannel('sendDataChannel');
         this.rtcPeerConnection.onicecandidate = event => transportICECandidate(event.candidate);
@@ -46,10 +57,11 @@ export class Connection {
     }
 
     public async receiveICECandidate(candidate: RTCIceCandidate) {
+        console.log('recieve ICECandidate', candidate);
         try {
             await this.rtcPeerConnection.addIceCandidate(candidate);
         } catch (e) {
-            console.warn('dodgy ICE candidate');
+            console.warn('dodgy ICE candidate', candidate);
         }
     }
 
@@ -60,6 +72,7 @@ export class Connection {
     }
 
     public async receiveOffer(sessionDescription: RTCSessionDescriptionInit) {
+        console.log('recieve offer', sessionDescription);
         await this.rtcPeerConnection.setRemoteDescription(sessionDescription);
         const answerDescription = await this.rtcPeerConnection.createAnswer();
         this.rtcPeerConnection.setLocalDescription(answerDescription);
@@ -67,6 +80,7 @@ export class Connection {
     }
 
     public async receiveAnswer(sessionDescription: RTCSessionDescriptionInit) {
+        console.log('recieve answer', sessionDescription);
         await this.rtcPeerConnection.setRemoteDescription(sessionDescription);
     }
     public send(obj) {

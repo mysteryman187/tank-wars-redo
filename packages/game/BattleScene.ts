@@ -38,7 +38,6 @@ export class BattleScene extends Scene {
         this.load.image('hotchkiss-chassis', 'assets/images/hotchkiss-chassis-64.png');
         this.load.image('hotchkiss-turret', 'assets/images/hotchkiss-turret-64.png');
         selectedRectangle(this);
-        console.log('==========', RANGE)
         rangeCircle(this, RANGE);
         projectile(this);
         generateHealthBars(this);

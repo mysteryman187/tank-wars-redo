@@ -10,12 +10,13 @@ const params = qs.parse(window.location.search.substring(1, window.location.sear
 const dev = Object.keys(params).includes('dev');
 const german = Object.keys(params).includes('german');
 const tanks = Object.keys(params).includes('tanks');
-var isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
+const isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/);
+const disableFullscreen = Object.keys(params).includes('fs');
 
 console.log('===dev=', dev);
 
-const width = Math.max(window.screen.width, window.screen.height);
-const height = Math.min(window.screen.width, window.screen.height);
+const width = disableFullscreen ? Math.max(window.innerWidth, window.innerHeight) : Math.max(window.screen.width, window.screen.height);
+const height = disableFullscreen ? Math.min(window.innerWidth, window.innerHeight) : Math.min(window.screen.width, window.screen.height);
 
 const game = new Game({
     type: AUTO,
@@ -46,8 +47,10 @@ if(dev){
 
 
 const promptFullScreen = () => {
-    const modal = document.querySelector('.modal') as HTMLElement;
-    modal.style.display = 'flex';
+    if(!isSafari && !disableFullscreen){
+        const modal = document.querySelector('.modal') as HTMLElement;
+        modal.style.display = 'flex';
+    }
 };
 
 document.addEventListener('webkitfullscreenchange', promptFullScreen, false);
@@ -57,7 +60,11 @@ document.addEventListener('MSFullscreenChange', promptFullScreen, false);
 
 const fullscreen = () => {
     const modal = document.querySelector('.modal') as HTMLElement;
-    game.canvas[game.device.fullscreen.request].call(game.canvas);
+    try {
+        game.canvas[game.device.fullscreen.request].call(game.canvas);
+    } catch (e) {
+        // not supported on iphones
+    }
     setTimeout(() => {
         modal.style.display = 'none';
     }, 500);
@@ -66,8 +73,4 @@ const fullscreen = () => {
 const modal = document.querySelector('.modal') as HTMLElement;
 modal.addEventListener('click', fullscreen);
 modal.addEventListener('touchend', fullscreen);
-
-
-if(!isSafari){
-    promptFullScreen();
-}
+promptFullScreen();
